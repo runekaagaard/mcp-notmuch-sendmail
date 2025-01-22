@@ -1,0 +1,157 @@
+/* Email-optimized LaTeX CSS */
+body {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  line-height: 1.8;
+  color: #000;
+  background: #fff;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  margin: 1.5em 0 0.5em 0;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 24pt;
+  text-align: center;
+}
+
+h2 {
+  font-size: 18pt;
+  margin-top: 2em;
+}
+
+h3 {
+  font-size: 14pt;
+}
+
+/* Basic text elements */
+p {
+  margin: 1em 0;
+  text-align: justify;
+}
+
+/* Code formatting */
+pre {
+  background: #f8f8f8;
+  border-left: 3px solid #ddd;
+  padding: 1em;
+  margin: 1em 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+code {
+  font-family: "Courier New", Courier, monospace;
+  background: #f4f4f4;
+  padding: 0.2em 0.4em;
+  font-size: 14px;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1em 0;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+}
+
+th {
+  border-bottom: 1px solid #000;
+  padding: 0.5em;
+  text-align: left;
+  font-weight: bold;
+}
+
+td {
+  padding: 0.5em;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Theorems and proofs */
+.theorem {
+  margin: 1em 0;
+  font-style: italic;
+  padding: 0.5em 1em;
+}
+
+.theorem::before {
+  content: "Theorem. ";
+  font-weight: bold;
+  font-style: normal;
+}
+
+.proof {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+}
+
+.proof::before {
+  content: "Proof. ";
+  font-style: italic;
+}
+
+.proof::after {
+  content: "□";
+  float: right;
+}
+
+/* Definition lists */
+dt {
+  font-weight: bold;
+  margin-top: 1em;
+}
+
+dd {
+  margin-left: 2em;
+  margin-bottom: 1em;
+}
+
+/* Blockquotes */
+blockquote {
+  margin: 1em 0;
+  padding: 0 2em;
+  border-left: 3px solid #000;
+  font-style: italic;
+}
+
+/* Author and Abstract */
+.author {
+  text-align: center;
+  margin: 1em 0;
+  font-variant: small-caps;
+}
+
+.abstract {
+  margin: 2em 0;
+}
+
+.abstract h2 {
+  text-align: center;
+  font-size: 16pt;
+}
+
+.abstract p {
+  text-align: justify;
+}
+
+/* Footnotes */
+.footnotes {
+  margin-top: 2em;
+  border-top: 1px solid #000;
+  padding-top: 1em;
+  font-size: 0.9em;
+}
+
+hr {
+  margin: 2em 0;
+  border: none;
+  height: 1px;
+  background-color: #888;
+}
