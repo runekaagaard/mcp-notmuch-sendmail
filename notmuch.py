@@ -1,39 +1,8 @@
-import base64, re, quopri, os, logging, traceback
+import base64, re, quopri
 from datetime import datetime
-from functools import wraps
 import html2text
 from notmuch import Query, Database
-
-### Constants ###
-NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
-REPLY_SEPARATORS = list(os.environ["REPLY_SEPARATORS"].split("|"))
-LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
-
-### Logging ###
-if LOG_FILE_PATH:
-    logger = logging.getLogger('function_logger')
-    fh = logging.FileHandler(LOG_FILE_PATH)
-    fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(fh)
-else:
-    logger = None
-
-def log(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not logger:
-            return func(*args, **kwargs)
-
-        try:
-            logger.info(f"Calling {func.__name__} with args={args}, kwargs={kwargs}")
-            result = func(*args, **kwargs)
-            logger.info(f"{func.__name__} returned {result}")
-            return result
-        except Exception as e:
-            logger.error(f"{func.__name__} raised {type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
-            raise
-
-    return wrapper
+from core import NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS, log
 
 ### Core Functions ###
 
@@ -47,7 +16,7 @@ def message_to_text(message):
     def extract_reply(text):
         result = []
         for line in text.splitlines():
-            for reply_separator in REPLY_SEPARATORS:
+            for reply_separator in NOTMUCH_REPLY_SEPARATORS:
                 if line.lower().startswith(reply_separator):
                     return "\n".join(result).strip()
             result.append(line)

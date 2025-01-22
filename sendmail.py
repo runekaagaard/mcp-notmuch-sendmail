@@ -11,7 +11,7 @@ from mdit_py_plugins.tasklists import tasklists_plugin
 from bs4 import BeautifulSoup
 
 ### Constants ###
-FROM_EMAIL = os.environ["FROM_EMAIL"]
+from core import SENDMAIL_FROM_EMAIL
 MARKDOWN_IT_FEATURES = ["table", "strikethrough"]
 MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
@@ -68,34 +68,39 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
     else:
         images = {}
 
-    full_html = f"""
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>{css}</style>
-    </head>
-    <body>
-        <article>
-            {html_content}
-        </article>
-    </body>
-    </html>
+    """Convert markdown content to HTML with optional CSS styling.
+    
+    Args:
+        markdown_text (str): The markdown content to convert
+        css_path (Path, optional): Path to CSS file to include
+        base_path (Path, optional): Base path for resolving relative image paths
+        extra_options (dict, optional): Additional conversion options
+        
+    Returns:
+        tuple: (html_string, dict_of_images)
     """
+    full_html = f"""<html>
+<head>
+    <meta charset="utf-8">
+    <style>{css}</style>
+</head>
+<body>
+    <article>
+        {html_content}
+    </article>
+</body>
+</html>"""
 
     return full_html, images
 
 def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None) -> str:
     """Create an HTML email draft from markdown content"""
-    draft = create_draft(
-        markdown_text=body_as_markdown,
-        metadata={
-            'subject': subject,
-            'to': to,
-            'cc': cc or [],
-            'bcc': bcc or []
-        },
-        base_path=Path.cwd()
-    )
+    draft = create_draft(markdown_text=body_as_markdown, metadata={
+        'subject': subject,
+        'to': to,
+        'cc': cc or [],
+        'bcc': bcc or []
+    }, base_path=Path.cwd())
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
@@ -115,7 +120,7 @@ def send():
 
     # Create email message
     msg = MIMEMultipart('alternative')
-    msg['From'] = FROM_EMAIL
+    msg['From'] = SENDMAIL_FROM_EMAIL
     msg['To'] = ', '.join(metadata['to'])
     if metadata['cc']:
         msg['Cc'] = ', '.join(metadata['cc'])
@@ -144,7 +149,7 @@ def send():
             tmp.write(msg.as_string())
             tmp.flush()
             subprocess.run(['sendmail', '-t'], input=Path(tmp.name).read_text(), text=True, check=True,
-                         capture_output=True)
+                           capture_output=True)
         return "Email sent successfully"
     except subprocess.CalledProcessError as e:
         return f"Error sending email: {e.stderr}"

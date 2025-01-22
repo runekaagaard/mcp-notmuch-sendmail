@@ -1,5 +1,5 @@
-import argparse
 from pathlib import Path
+from core import parse_arguments, SENDMAIL_FROM_EMAIL
 from mcp.server.fastmcp import FastMCP
 from notmuch import find_threads, view_thread
 from sendmail import compose, send, create_draft
@@ -24,20 +24,17 @@ def send_draft() -> str:
     return send()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--test-html', action='store_true', help='Generate HTML from email_example.md')
-    args = parser.parse_args()
-
-    if args.test_html:
+    test_mode = parse_arguments()
+    
+    if test_mode:
         draft = create_draft(
             markdown_text=Path('email_example.md').read_text(),
             metadata={
                 'subject': 'Test Email',
-                'to': [os.environ["FROM_EMAIL"]],
+                'to': [SENDMAIL_FROM_EMAIL],
                 'cc': [],
                 'bcc': []
             },
-            base_path=Path.cwd()
-        )
+            base_path=Path.cwd())
     else:
         mcp.run()
