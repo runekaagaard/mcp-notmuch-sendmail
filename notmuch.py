@@ -1,19 +1,15 @@
-import base64, re, quopri, os, logging, traceback, sys, platform, json
+import base64, re, quopri, os, logging, traceback
 from datetime import datetime
 from functools import wraps
-
 import html2text
-from mcp.server.fastmcp import FastMCP
 from notmuch import Query, Database
 
 ### Constants ###
-
 NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
 REPLY_SEPARATORS = list(os.environ["REPLY_SEPARATORS"].split("|"))
 LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
 
 ### Logging ###
-
 if LOG_FILE_PATH:
     logger = logging.getLogger('function_logger')
     fh = logging.FileHandler(LOG_FILE_PATH)
@@ -39,7 +35,7 @@ def log(func):
 
     return wrapper
 
-### Notmuch API ###
+### Core Functions ###
 
 def fmt_timestamp(timestamp):
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
@@ -88,13 +84,8 @@ def message_to_text(message):
 
     return "\n".join(result)
 
-### MCP Implementation ###
-
-mcp = FastMCP("Notmuch MCP")
-
-@mcp.tool(description=f"Find email threads in the notmuch database at {NOTMUCH_DATABASE_PATH}")
 @log
-def find_email_thread(notmuch_search_query: str) -> str:
+def find_threads(notmuch_search_query: str) -> str:
     db = Database(NOTMUCH_DATABASE_PATH)
     query = Query(db, notmuch_search_query)
     query.set_sort(Query.SORT.NEWEST_FIRST)
@@ -118,9 +109,8 @@ def find_email_thread(notmuch_search_query: str) -> str:
 
     return "\n".join(result)
 
-@mcp.tool(description=f"View all messages for an email thread in the notmuch database at {NOTMUCH_DATABASE_PATH}")
 @log
-def view_email_thread(thread_id: str) -> str:
+def view_thread(thread_id: str) -> str:
     db = Database(NOTMUCH_DATABASE_PATH)
     query = Query(db, f'thread:{thread_id}')
     query.set_sort(Query.SORT.OLDEST_FIRST)
@@ -132,6 +122,3 @@ def view_email_thread(thread_id: str) -> str:
     del db
 
     return result
-
-if __name__ == "__main__":
-    mcp.run()
