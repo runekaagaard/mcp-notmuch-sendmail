@@ -3,13 +3,13 @@ name = "mcp-notmuch-sendmail"
 version = "0.1.0"
 description = "MCP server that reads email with notmuch and uses semdmail for LaTeX-enhanced email composition"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.10.*"
 dependencies = [
     "bs4>=0.0.2",
     "html2text>=2024.2.26",
     "markdown-checklist>=0.4.4",
     "markdown>=3.7",
-    "mcp[cli]===1.2.0rc1",
+    "mcp[cli]==1.2.0",
     "mdit-py-plugins>=0.4.2",
     "notmuch>=0.29.2",
     "pymdown-extensions>=10.14",

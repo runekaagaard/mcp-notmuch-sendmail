@@ -1,7 +1,7 @@
 from pathlib import Path
 from core import parse_arguments, SENDMAIL_FROM_EMAIL
 from mcp.server.fastmcp import FastMCP
-from notmuch import find_threads, view_thread
+from notmuchlib import find_threads, view_thread
 from sendmail import compose, send, create_draft
 
 ### MCP Setup ###

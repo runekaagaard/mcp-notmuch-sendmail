@@ -170,3 +170,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .aider*
+
+# Email drafts
+drafts/**
+test_config.json
