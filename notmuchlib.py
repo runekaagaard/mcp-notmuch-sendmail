@@ -79,6 +79,40 @@ def find_threads(notmuch_search_query: str) -> str:
     return "\n".join(result)
 
 @log
+@log
+def get_thread_info(thread_id: str) -> dict:
+    """Get threading information from the latest message in a thread.
+    
+    Args:
+        thread_id: The notmuch thread ID
+        
+    Returns:
+        dict with keys: message_id, references, in_reply_to, subject
+    """
+    db = Database(NOTMUCH_DATABASE_PATH)
+    query = Query(db, f'thread:{thread_id}')
+    query.set_sort(Query.SORT.NEWEST_FIRST)
+    messages = query.search_messages()
+    
+    # Get the latest message
+    latest = next(messages)
+    
+    info = {
+        'message_id': latest.get_header('Message-ID'),
+        'references': latest.get_header('References'),
+        'in_reply_to': latest.get_header('In-Reply-To'),
+        'subject': latest.get_header('Subject'),
+        'from': latest.get_header('From'),
+        'reply_to': latest.get_header('Reply-To')
+    }
+    
+    db.close()
+    del query
+    del db
+    
+    return info
+
+@log
 def view_thread(thread_id: str) -> str:
     db = Database(NOTMUCH_DATABASE_PATH)
     query = Query(db, f'thread:{thread_id}')

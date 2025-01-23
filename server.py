@@ -16,8 +16,8 @@ def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
 
 @mcp.tool(description="Compose an html email draft from markdown")
-def compose_email(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None) -> str:
-    return compose(subject, body_as_markdown, to, cc, bcc)
+def compose_email(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None, thread_id: str = None) -> str:
+    return compose(subject, body_as_markdown, to, cc, bcc, thread_id)
 
 @mcp.tool(description="Sends the composed email draft")
 def send_draft() -> str:

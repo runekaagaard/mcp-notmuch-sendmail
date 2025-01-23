@@ -17,7 +17,7 @@ MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
 ### Core Functions ###
 
-def create_draft(markdown_text: str, metadata: dict, base_path: Path = None) -> dict:
+def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, base_path: Path = None) -> dict:
     """Creates a draft from markdown content and metadata."""
     drafts_dir = Path('drafts')
     drafts_dir.mkdir(exist_ok=True)
@@ -93,14 +93,28 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
 
     return full_html, images
 
-def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None) -> str:
-    """Create an HTML email draft from markdown content"""
-    draft = create_draft(markdown_text=body_as_markdown, metadata={
-        'subject': subject,
-        'to': to,
-        'cc': cc or [],
-        'bcc': bcc or []
-    }, base_path=Path.cwd())
+def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None, thread_id: str = None) -> str:
+    """Create an HTML email draft from markdown content, optionally as a reply to a thread"""
+    thread_info = None
+    if thread_id:
+        from notmuchlib import get_thread_info
+        thread_info = get_thread_info(thread_id)
+        # If subject doesn't start with Re:, add it
+        if not subject.lower().startswith('re:') and thread_info['subject'].lower().startswith('re:'):
+            subject = f"Re: {subject}"
+            
+    draft = create_draft(
+        markdown_text=body_as_markdown,
+        metadata={
+            'subject': subject,
+            'to': to,
+            'cc': cc or [],
+            'bcc': bcc or [],
+            'thread_info': thread_info
+        },
+        thread_info=thread_info,
+        base_path=Path.cwd()
+    )
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
@@ -120,6 +134,19 @@ def send():
 
     # Create email message
     msg = MIMEMultipart('alternative')
+    
+    # Add threading headers if this is a reply
+    if 'thread_info' in metadata and metadata['thread_info']:
+        thread_info = metadata['thread_info']
+        if thread_info['references']:
+            msg['References'] = thread_info['references']
+            if thread_info['message_id']:
+                msg['References'] = f"{msg['References']} {thread_info['message_id']}"
+        elif thread_info['message_id']:
+            msg['References'] = thread_info['message_id']
+            
+        if thread_info['message_id']:
+            msg['In-Reply-To'] = thread_info['message_id']
     msg['From'] = SENDMAIL_FROM_EMAIL
     msg['To'] = ', '.join(metadata['to'])
     if metadata['cc']:
