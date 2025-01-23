@@ -26,7 +26,16 @@ def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, b
     md_path.write_text(markdown_text)
 
     css_path = base_path / 'latex.css' if base_path else Path('latex.css')
-    html, images = markdown_to_html(markdown_text, css_path=css_path, base_path=base_path)
+    html, images = markdown_to_html(markdown_text, css_path=css_path, base_path=base_path, metadata=metadata)
+    """Creates a draft from markdown content and metadata."""
+    drafts_dir = Path('drafts')
+    drafts_dir.mkdir(exist_ok=True)
+
+    md_path = drafts_dir / 'draft.md'
+    md_path.write_text(markdown_text)
+
+    css_path = base_path / 'latex.css' if base_path else Path('latex.css')
+    html, images = markdown_to_html(markdown_text, css_path=css_path, base_path=base_path, metadata=metadata)
     html_path = drafts_dir / 'draft.html'
     html_path.write_text(html)
 
@@ -35,7 +44,29 @@ def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, b
 
     return {'markdown': md_path, 'html': html_path, 'metadata': metadata_path, 'images': images}
 
-def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options=None):
+def format_email_header(metadata):
+    """Format email metadata as HTML."""
+    parts = []
+    
+    if metadata.get('subject'):
+        parts.append(f"<strong>Subject:</strong> {metadata['subject']}")
+    if metadata.get('to'):
+        parts.append(f"<strong>To:</strong> {', '.join(metadata['to'])}")
+    if metadata.get('cc') and metadata['cc']:
+        parts.append(f"<strong>Cc:</strong> {', '.join(metadata['cc'])}")
+    if metadata.get('bcc') and metadata['bcc']:
+        parts.append(f"<strong>Bcc:</strong> {', '.join(metadata['bcc'])}")
+    
+    if 'thread_info' in metadata and metadata['thread_info']:
+        ti = metadata['thread_info']
+        if ti.get('in_reply_to'):
+            parts.append(f"<strong>In-Reply-To:</strong> {ti['in_reply_to']}")
+    
+    if parts:
+        return f"<div class='email-header'>{' <br> '.join(parts)}<hr></div>"
+    return ""
+
+def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options=None, metadata=None):
     """Convert markdown to HTML using markdown-it-py"""
     css = css_path.read_text() if css_path else ''
 
@@ -79,12 +110,27 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
     Returns:
         tuple: (html_string, dict_of_images)
     """
+    css_content = css + '''
+        /* Email header styles */
+        .email-header {
+            padding: 1em;
+            background: #f5f5f5;
+            margin-bottom: 2em;
+        }
+        .email-header hr {
+            margin-top: 1em;
+        }
+    '''
+    
     full_html = f"""<html>
 <head>
     <meta charset="utf-8">
-    <style>{css}</style>
+    <style>
+        {css_content}
+    </style>
 </head>
 <body>
+    {format_email_header(metadata) if metadata else ''}
     <article>
         {html_content}
     </article>
