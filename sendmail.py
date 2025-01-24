@@ -11,7 +11,7 @@ from mdit_py_plugins.tasklists import tasklists_plugin
 from bs4 import BeautifulSoup
 
 ### Constants ###
-from core import SENDMAIL_FROM_EMAIL
+from core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML
 MARKDOWN_IT_FEATURES = ["table", "strikethrough"]
 MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
@@ -134,6 +134,7 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
     <article>
         {html_content}
     </article>
+    {SENDMAIL_EMAIL_SIGNATURE_HTML}
 </body>
 </html>"""
 
