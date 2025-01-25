@@ -79,7 +79,7 @@ Add to your `claude_desktop_config.json`:
       "args": ["--directory", "/path/to/mcp-notmuch-sendmail", "run", "server.py"],
       "env": {
         "NOTMUCH_DATABASE_PATH": "/path/to/your/notmuch/db",
-        "NOTMUCH_REPLY_SEPARATORS": "Best regards,|From:">",
+        "NOTMUCH_REPLY_SEPARATORS": "Pipe|Separated|Phrases",
         "SENDMAIL_FROM_EMAIL": "your.email@example.com",
         "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
         "LOG_FILE_PATH": "/path/to/log/file.log"
