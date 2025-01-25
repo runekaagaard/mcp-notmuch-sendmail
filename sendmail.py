@@ -88,14 +88,16 @@ def compose(subject: str, body_as_markdown: str, to: List[str], cc: Optional[Lis
         from notmuchlib import get_thread_info
         thread_info = get_thread_info(thread_id)
 
+    metadata = {
+        'subject': subject,
+        'to': to,
+        'cc': cc or [],
+        'bcc': bcc or [],
+        'thread_info': thread_info
+    }
     draft = create_draft(
-        markdown_text=body_as_markdown, metadata={
-            'subject': subject,
-            'to': to,
-            'cc': cc or [],
-            'bcc': bcc or [],
-            'thread_info': thread_info
-        }, thread_info=thread_info)
+        markdown_text=body_as_markdown,
+        metadata=metadata)
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
