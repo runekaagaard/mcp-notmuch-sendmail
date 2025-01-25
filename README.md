@@ -46,15 +46,30 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   Earlier message...
   ```
 
-- **compose_email**
-  - Compose an HTML email draft from markdown
+- **compose_new_email**
+  - Compose a new email draft from markdown
   - Inputs:
     - `subject` (string): Email subject
     - `body_as_markdown` (string): Email body in markdown
     - `to` (list): Recipient email addresses
     - `cc` (list, optional): CC recipients
     - `bcc` (list, optional): BCC recipients
-    - `thread_id` (string, optional): Thread ID when replying
+  - Creates draft files and returns paths:
+  ```
+  Created drafts:
+  - drafts/draft.md (edit this)
+  - drafts/draft.html (preview)
+  ```
+
+- **compose_email_reply**
+  - Compose a reply to an existing email thread
+  - Inputs:
+    - `thread_id` (string): Thread ID to reply to
+    - `subject` (string): Email subject
+    - `body_as_markdown` (string): Email body in markdown
+    - `to` (list): Recipient email addresses
+    - `cc` (list, optional): CC recipients
+    - `bcc` (list, optional): BCC recipients
   - Creates draft files and returns paths:
   ```
   Created drafts:

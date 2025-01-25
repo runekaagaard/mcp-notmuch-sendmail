@@ -15,9 +15,13 @@ def find_email_thread(notmuch_search_query: str) -> str:
 def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
 
-@mcp.tool(description="Compose an html email draft from markdown")
-def compose_email(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None,
-                  thread_id: str = None) -> str:
+@mcp.tool(description="Compose a new email draft from markdown. Math is not supported.")
+def compose_new_email(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None) -> str:
+    return compose(subject, body_as_markdown, to, cc, bcc, thread_id=None)
+
+@mcp.tool(description="Compose a reply to an existing email thread. Math is not supported.")
+def compose_email_reply(thread_id: str, subject: str, body_as_markdown: str, to: list, cc: list = None,
+                        bcc: list = None) -> str:
     return compose(subject, body_as_markdown, to, cc, bcc, thread_id)
 
 @mcp.tool(description="Sends the composed email draft")
