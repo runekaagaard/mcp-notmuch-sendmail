@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 
 ### Constants ###
 from core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML
+
 MARKDOWN_IT_FEATURES = ["table", "strikethrough"]
 MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
@@ -47,7 +48,7 @@ def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, b
 def format_email_header(metadata):
     """Format email metadata as HTML."""
     parts = []
-    
+
     if metadata.get('subject'):
         parts.append(f"<strong>Subject:</strong> {metadata['subject']}")
     if metadata.get('to'):
@@ -56,12 +57,12 @@ def format_email_header(metadata):
         parts.append(f"<strong>Cc:</strong> {', '.join(metadata['cc'])}")
     if metadata.get('bcc') and metadata['bcc']:
         parts.append(f"<strong>Bcc:</strong> {', '.join(metadata['bcc'])}")
-    
+
     if 'thread_info' in metadata and metadata['thread_info']:
         ti = metadata['thread_info']
         if ti.get('in_reply_to'):
             parts.append(f"<strong>In-Reply-To:</strong> {ti['in_reply_to']}")
-    
+
     if parts:
         return f"<div class='email-header'>{' <br> '.join(parts)}<hr></div>"
     return ""
@@ -98,7 +99,6 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
         html_content = str(soup)
     else:
         images = {}
-
     """Convert markdown content to HTML with optional CSS styling.
     
     Args:
@@ -121,7 +121,7 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
             margin-top: 1em;
         }
     '''
-    
+
     full_html = f"""<html>
 <head>
     <meta charset="utf-8">
@@ -140,28 +140,22 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
 
     return full_html, images
 
-def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None, thread_id: str = None) -> str:
+def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None,
+            thread_id: str = None) -> str:
     """Create an HTML email draft from markdown content, optionally as a reply to a thread"""
     thread_info = None
     if thread_id:
         from notmuchlib import get_thread_info
         thread_info = get_thread_info(thread_id)
-        # If subject doesn't start with Re:, add it
-        if not subject.lower().startswith('re:') and thread_info['subject'].lower().startswith('re:'):
-            subject = f"Re: {subject}"
-            
+
     draft = create_draft(
-        markdown_text=body_as_markdown,
-        metadata={
+        markdown_text=body_as_markdown, metadata={
             'subject': subject,
             'to': to,
             'cc': cc or [],
             'bcc': bcc or [],
             'thread_info': thread_info
-        },
-        thread_info=thread_info,
-        base_path=Path.cwd()
-    )
+        }, thread_info=thread_info, base_path=Path.cwd())
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
@@ -181,7 +175,7 @@ def send():
 
     # Create email message
     msg = MIMEMultipart('alternative')
-    
+
     # Add threading headers if this is a reply
     if 'thread_info' in metadata and metadata['thread_info']:
         thread_info = metadata['thread_info']
@@ -191,7 +185,7 @@ def send():
                 msg['References'] = f"{msg['References']} {thread_info['message_id']}"
         elif thread_info['message_id']:
             msg['References'] = thread_info['message_id']
-            
+
         if thread_info['message_id']:
             msg['In-Reply-To'] = thread_info['message_id']
     msg['From'] = SENDMAIL_FROM_EMAIL
