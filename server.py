@@ -8,7 +8,7 @@ from sendmail import compose, send
 
 mcp = FastMCP("Notmuch Email Client")
 
-SIGNATURE_NOTE = ". A signature will be automatically added." if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
+SIGNATURE_NOTE = ". NEVER add the signature, it will be automatically added!" if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
 
 @mcp.tool(description="Find email threads in the notmuch database")
 @log

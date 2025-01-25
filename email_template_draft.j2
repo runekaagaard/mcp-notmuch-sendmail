@@ -1,0 +1,53 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        {{ css }}
+        /* Layout styles */
+        .wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Email header styles */
+        .email-header {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .email-header strong {
+            display: inline-block;
+            width: 5.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        {% if metadata %}
+        <div class='email-header'>
+            {% if metadata.subject %}
+            <strong>Subject:</strong> {{ metadata.subject }}<br>
+            {% endif %}
+            {% if metadata.to %}
+            <strong>To:</strong> {{ metadata.to|join(', ') }}<br>
+            {% endif %}
+            {% if metadata.cc %}
+            <strong>Cc:</strong> {{ metadata.cc|join(', ') }}<br>
+            {% endif %}
+            {% if metadata.bcc %}
+            <strong>Bcc:</strong> {{ metadata.bcc|join(', ') }}<br>
+            {% endif %}
+            {% if metadata.thread_info and metadata.thread_info.in_reply_to %}
+            <strong>In-Reply-To:</strong> {{ metadata.thread_info.in_reply_to }}<br>
+            {% endif %}
+        </div>
+        {% endif %}
+        <hr>
+        <article>
+            {{ content }}
+            {{ signature }}
+        </article>
+    </div>
+</body>
+</html>

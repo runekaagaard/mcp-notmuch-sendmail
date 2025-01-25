@@ -3,41 +3,19 @@
     <meta charset="utf-8">
     <style>
         {{ css }}
-        /* Email header styles */
-        .email-header {
-            padding: 1em;
-            background: #f5f5f5;
-            margin-bottom: 2em;
-        }
-        .email-header hr {
-            margin-top: 1em;
+        .wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
     </style>
 </head>
 <body>
-    {% if metadata %}
-    <div class='email-header'>
-        {% if metadata.subject %}
-        <strong>Subject:</strong> {{ metadata.subject }}<br>
-        {% endif %}
-        {% if metadata.to %}
-        <strong>To:</strong> {{ metadata.to|join(', ') }}<br>
-        {% endif %}
-        {% if metadata.cc %}
-        <strong>Cc:</strong> {{ metadata.cc|join(', ') }}<br>
-        {% endif %}
-        {% if metadata.bcc %}
-        <strong>Bcc:</strong> {{ metadata.bcc|join(', ') }}<br>
-        {% endif %}
-        {% if metadata.thread_info and metadata.thread_info.in_reply_to %}
-        <strong>In-Reply-To:</strong> {{ metadata.thread_info.in_reply_to }}<br>
-        {% endif %}
-        <hr>
+    <div class="wrapper">
+        <article>
+            {{ content }}
+            {{ signature }}
+        </article>
     </div>
-    {% endif %}
-    <article>
-        {{ content }}
-    </article>
-    {{ signature }}
 </body>
 </html>

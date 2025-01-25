@@ -72,7 +72,7 @@ def markdown_to_html(markdown_text: str, css_path: Optional[Path] = None, extra_
 
     # Setup Jinja2 environment
     env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template('email_template.j2')
+    template = env.get_template('email_template_draft.j2' if metadata else 'email_template.j2')
 
     # Render the template
     full_html = template.render(content=html_content, css=css, metadata=metadata,
