@@ -47,7 +47,7 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   ```
 
 - **compose_new_email**
-  - Compose a new email draft from markdown
+  - Compose a new email draft from markdown. A signature will be automatically added if SENDMAIL_EMAIL_SIGNATURE_HTML is set.
   - Inputs:
     - `subject` (string): Email subject
     - `body_as_markdown` (string): Email body in markdown
@@ -62,7 +62,7 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   ```
 
 - **compose_email_reply**
-  - Compose a reply to an existing email thread
+  - Compose a reply to an existing email thread. A signature will be automatically added if SENDMAIL_EMAIL_SIGNATURE_HTML is set.
   - Inputs:
     - `thread_id` (string): Thread ID to reply to
     - `subject` (string): Email subject

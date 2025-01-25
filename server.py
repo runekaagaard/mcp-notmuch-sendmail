@@ -1,11 +1,14 @@
 from pathlib import Path
-from core import parse_arguments, SENDMAIL_FROM_EMAIL
+from core import parse_arguments, SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML
 from mcp.server.fastmcp import FastMCP
 from notmuchlib import find_threads, view_thread
 from sendmail import compose, send, create_draft
 
 ### MCP Setup ###
 mcp = FastMCP("Notmuch Email Client")
+
+# Prepare tool descriptions
+SIGNATURE_NOTE = ". A signature will be automatically added." if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
 
 @mcp.tool(description="Find email threads in the notmuch database")
 def find_email_thread(notmuch_search_query: str) -> str:
@@ -15,11 +18,11 @@ def find_email_thread(notmuch_search_query: str) -> str:
 def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
 
-@mcp.tool(description="Compose a new email draft from markdown. Math is not supported.")
+@mcp.tool(description=f"Compose a new email draft from markdown{SIGNATURE_NOTE}")
 def compose_new_email(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None) -> str:
     return compose(subject, body_as_markdown, to, cc, bcc, thread_id=None)
 
-@mcp.tool(description="Compose a reply to an existing email thread. Math is not supported.")
+@mcp.tool(description=f"Compose a reply to an existing email thread{SIGNATURE_NOTE}")
 def compose_email_reply(thread_id: str, subject: str, body_as_markdown: str, to: list, cc: list = None,
                         bcc: list = None) -> str:
     return compose(subject, body_as_markdown, to, cc, bcc, thread_id)
