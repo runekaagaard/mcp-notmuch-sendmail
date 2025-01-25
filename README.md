@@ -145,6 +145,17 @@ Il.*ha scritto:|Da:|Inviato|A:|Oggetto:|Data:|Cc:|Cordiali saluti|Inviato da
 
 Note: Use | (pipe) to separate patterns. These are simplified patterns derived from common email clients - you may need to adjust them based on your specific needs.
 
+## Contributing
+
+Contributions are warmly welcomed! Whether it's bug reports, feature requests, documentation improvements, or code contributions - all input is valuable. Feel free to:
+
+- Open an issue to report bugs or suggest features
+- Submit pull requests with improvements
+- Enhance documentation or share your usage examples
+- Ask questions and share your experiences
+
+The goal is to make email management with Claude even better, and your insights and contributions help achieve that.
+
 ## Acknowledgments
 
 This project builds on the excellent work of others:
