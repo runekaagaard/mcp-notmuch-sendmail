@@ -62,7 +62,7 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   - drafts/draft.html (preview)
   ```
 
-- **send_draft**
+- **send_email**
   - Sends the composed email draft
   - No input required
   - Returns success/error message
