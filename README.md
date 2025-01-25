@@ -79,7 +79,7 @@ Add to your `claude_desktop_config.json`:
       "args": ["--directory", "/path/to/mcp-notmuch-sendmail", "run", "server.py"],
       "env": {
         "NOTMUCH_DATABASE_PATH": "/path/to/your/notmuch/db",
-        "NOTMUCH_REPLY_SEPARATORS": "On|Le|El|Am|В|Den",
+        "NOTMUCH_REPLY_SEPARATORS": "Best regards,|From:">",
         "SENDMAIL_FROM_EMAIL": "your.email@example.com",
         "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
         "LOG_FILE_PATH": "/path/to/log/file.log"
@@ -92,7 +92,7 @@ Add to your `claude_desktop_config.json`:
 Environment Variables:
 
 - `NOTMUCH_DATABASE_PATH`: Path to your notmuch database (required)
-- `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers used to detect and deduplicate reply content (required)
+- `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
 - `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (required)
 - `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
@@ -111,6 +111,39 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 3. Add email configuration to claude_desktop_config.json (see above)
+
+## Reply Separators
+
+The `NOTMUCH_REPLY_SEPARATORS` environment variable controls email reply detection. When viewing a thread, each email's content is trimmed at the first line that starts with any of the configured separators. This effectively removes quoted replies while keeping the new content.
+
+Here are recommended separator patterns for different languages:
+
+### English
+```
+On|wrote:|From:|Sent:|To:|Subject:|Date:|Cc:|Best regards|Kind Regards|Thanks,|Thank you,|Best,|All the best|regards,|Sent from my|Get Outlook for|CAUTION:|Disclaimer:|Warning:|Confidential:|CONFIDENTIALITY:|---------- Original Message ----------
+```
+
+### German
+```
+Am.*schrieb|Von:|Gesendet|An:|Betreff:|Datum:|Cc:|Organisation:|Mit freundlichen Grüßen|Beste Grüße|Viele Grüße|Hinweis:|Achtung:|Gesendet von
+```
+
+### French
+```
+Le.*a écrit|De |Envoyé |À |Objet |Cc |cordialement|salutations|bonne réception|bonne journée|Envoyé depuis
+```
+
+### Dutch
+```
+Op.*schreef:|Van:|Verzonden|Aan:|Onderwerp:|Datum:|Cc:|Met vriendelijke groet|Hartelijke groeten|Bedankt,|Dank u,|Verzonden vanaf
+```
+
+### Italian
+```
+Il.*ha scritto:|Da:|Inviato|A:|Oggetto:|Data:|Cc:|Cordiali saluti|Inviato da
+```
+
+Note: Use | (pipe) to separate patterns. These are simplified patterns derived from common email clients - you may need to adjust them based on your specific needs.
 
 ## License
 
