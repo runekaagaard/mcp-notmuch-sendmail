@@ -145,6 +145,16 @@ Il.*ha scritto:|Da:|Inviato|A:|Oggetto:|Data:|Cc:|Cordiali saluti|Inviato da
 
 Note: Use | (pipe) to separate patterns. These are simplified patterns derived from common email clients - you may need to adjust them based on your specific needs.
 
+## Acknowledgments
+
+This project builds on the excellent work of others:
+
+- [mail-parser-reply](https://github.com/alfonsrv/mail-parser-reply) - For the comprehensive email reply marker patterns
+- [notmuch](https://notmuchmail.org/) - The fast mail indexing and search engine
+- [html2text](https://github.com/Alir3z4/html2text) - For converting HTML emails to readable text
+- [markdown-it-py](https://github.com/executablebooks/markdown-it-py) - For generating beautiful HTML emails
+- [latex.css](https://latex.vercel.app/) - For the LaTeX-style email formatting
+
 ## License
 
 Mozilla Public License Version 2.0
