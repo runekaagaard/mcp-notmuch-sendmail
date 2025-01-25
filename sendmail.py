@@ -1,5 +1,7 @@
 import tempfile, subprocess, hashlib, mimetypes, json, os
 from pathlib import Path
+from typing import Optional, Dict, List
+from core import BASE_PATH
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -9,6 +11,7 @@ from mdit_py_plugins.deflist import deflist_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
 from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
 
 ### Constants ###
 from core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML
@@ -18,7 +21,7 @@ MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
 ### Core Functions ###
 
-def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, base_path: Path = None) -> dict:
+def create_draft(markdown_text: str, metadata: Dict, thread_info: Optional[Dict] = None) -> Dict:
     """Creates a draft from markdown content and metadata."""
     drafts_dir = Path('drafts')
     drafts_dir.mkdir(exist_ok=True)
@@ -26,17 +29,8 @@ def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, b
     md_path = drafts_dir / 'draft.md'
     md_path.write_text(markdown_text)
 
-    css_path = base_path / 'latex.css' if base_path else Path('latex.css')
-    html, images = markdown_to_html(markdown_text, css_path=css_path, base_path=base_path, metadata=metadata)
-    """Creates a draft from markdown content and metadata."""
-    drafts_dir = Path('drafts')
-    drafts_dir.mkdir(exist_ok=True)
-
-    md_path = drafts_dir / 'draft.md'
-    md_path.write_text(markdown_text)
-
-    css_path = base_path / 'latex.css' if base_path else Path('latex.css')
-    html, images = markdown_to_html(markdown_text, css_path=css_path, base_path=base_path, metadata=metadata)
+    css_path = BASE_PATH / 'latex.css'
+    html, images = markdown_to_html(markdown_text, css_path=css_path, metadata=metadata)
     html_path = drafts_dir / 'draft.html'
     html_path.write_text(html)
 
@@ -45,30 +39,9 @@ def create_draft(markdown_text: str, metadata: dict, thread_info: dict = None, b
 
     return {'markdown': md_path, 'html': html_path, 'metadata': metadata_path, 'images': images}
 
-def format_email_header(metadata):
-    """Format email metadata as HTML."""
-    parts = []
-
-    if metadata.get('subject'):
-        parts.append(f"<strong>Subject:</strong> {metadata['subject']}")
-    if metadata.get('to'):
-        parts.append(f"<strong>To:</strong> {', '.join(metadata['to'])}")
-    if metadata.get('cc') and metadata['cc']:
-        parts.append(f"<strong>Cc:</strong> {', '.join(metadata['cc'])}")
-    if metadata.get('bcc') and metadata['bcc']:
-        parts.append(f"<strong>Bcc:</strong> {', '.join(metadata['bcc'])}")
-
-    if 'thread_info' in metadata and metadata['thread_info']:
-        ti = metadata['thread_info']
-        if ti.get('in_reply_to'):
-            parts.append(f"<strong>In-Reply-To:</strong> {ti['in_reply_to']}")
-
-    if parts:
-        return f"<div class='email-header'>{' <br> '.join(parts)}<hr></div>"
-    return ""
-
-def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options=None, metadata=None):
-    """Convert markdown to HTML using markdown-it-py"""
+def markdown_to_html(markdown_text: str, css_path: Optional[Path] = None, extra_options: Optional[Dict] = None,
+                     metadata: Optional[Dict] = None) -> tuple[str, Dict]:
+    """Convert markdown content to HTML with optional CSS styling."""
     css = css_path.read_text() if css_path else ''
 
     md = markdown_it.MarkdownIt('commonmark', {'html': True})
@@ -79,69 +52,36 @@ def markdown_to_html(markdown_text, css_path=None, base_path=None, extra_options
 
     html_content = md.render(markdown_text)
 
-    if base_path:
-        soup = BeautifulSoup(html_content, "html.parser")
-        imgs = soup.findAll('img')
-        images = {}
+    images = {}
+    soup = BeautifulSoup(html_content, "html.parser")
+    imgs = soup.findAll('img')
 
-        for img in imgs:
-            src = img['src']
-            if src.startswith('data:'):
-                continue
-            elif not src.startswith('http'):
-                content_id = f"{hashlib.md5(src.encode('utf-8')).hexdigest()[:6]}_{Path(src).name}"
-                img_path = Path(base_path) / src
+    for img in imgs:
+        src = img['src']
+        if src.startswith('data:'):
+            continue
+        elif not src.startswith('http'):
+            content_id = f"{hashlib.md5(src.encode('utf-8')).hexdigest()[:6]}_{Path(src).name}"
+            img_path = BASE_PATH / src
 
-                if img_path.exists():
-                    images[content_id] = img_path
-                    img['src'] = f'cid:{content_id}'
+            if img_path.exists():
+                images[content_id] = img_path
+                img['src'] = f'cid:{content_id}'
 
-        html_content = str(soup)
-    else:
-        images = {}
-    """Convert markdown content to HTML with optional CSS styling.
-    
-    Args:
-        markdown_text (str): The markdown content to convert
-        css_path (Path, optional): Path to CSS file to include
-        base_path (Path, optional): Base path for resolving relative image paths
-        extra_options (dict, optional): Additional conversion options
-        
-    Returns:
-        tuple: (html_string, dict_of_images)
-    """
-    css_content = css + '''
-        /* Email header styles */
-        .email-header {
-            padding: 1em;
-            background: #f5f5f5;
-            margin-bottom: 2em;
-        }
-        .email-header hr {
-            margin-top: 1em;
-        }
-    '''
+    html_content = str(soup)
 
-    full_html = f"""<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        {css_content}
-    </style>
-</head>
-<body>
-    {format_email_header(metadata) if metadata else ''}
-    <article>
-        {html_content}
-    </article>
-    {SENDMAIL_EMAIL_SIGNATURE_HTML}
-</body>
-</html>"""
+    # Setup Jinja2 environment
+    env = Environment(loader=FileSystemLoader('.'))
+    template = env.get_template('email_template.j2')
+
+    # Render the template
+    full_html = template.render(content=html_content, css=css, metadata=metadata,
+                                signature=SENDMAIL_EMAIL_SIGNATURE_HTML)
 
     return full_html, images
 
-def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc: list = None,
-            thread_id: str = None) -> str:
+def compose(subject: str, body_as_markdown: str, to: List[str], cc: Optional[List[str]] = None,
+            bcc: Optional[List[str]] = None, thread_id: Optional[str] = None) -> str:
     """Create an HTML email draft from markdown content, optionally as a reply to a thread"""
     thread_info = None
     if thread_id:
@@ -155,7 +95,7 @@ def compose(subject: str, body_as_markdown: str, to: list, cc: list = None, bcc:
             'cc': cc or [],
             'bcc': bcc or [],
             'thread_info': thread_info
-        }, thread_info=thread_info, base_path=Path.cwd())
+        }, thread_info=thread_info)
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
@@ -169,9 +109,8 @@ def send():
 
     body_as_markdown = md_path.read_text()
     metadata = json.loads(metadata_path.read_text())
-    base_path = Path.cwd()
-    css_path = base_path / 'latex.css'
-    html, images = markdown_to_html(body_as_markdown, css_path=css_path, base_path=base_path)
+    css_path = BASE_PATH / 'latex.css'
+    html, images = markdown_to_html(body_as_markdown, css_path=css_path)
 
     # Create email message
     msg = MIMEMultipart('alternative')

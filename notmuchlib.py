@@ -1,8 +1,9 @@
 import base64, re, quopri
 from datetime import datetime
+from typing import Dict, Optional
 import html2text
 from notmuch import Query, Database
-from core import NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS, log
+from core import NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS
 
 ### Core Functions ###
 
@@ -53,7 +54,6 @@ def message_to_text(message):
 
     return "\n".join(result)
 
-@log
 def find_threads(notmuch_search_query: str) -> str:
     db = Database(NOTMUCH_DATABASE_PATH)
     query = Query(db, notmuch_search_query)
@@ -78,9 +78,7 @@ def find_threads(notmuch_search_query: str) -> str:
 
     return "\n".join(result)
 
-@log
-@log
-def get_thread_info(thread_id: str) -> dict:
+def get_thread_info(thread_id: str) -> Dict:
     """Get threading information from the latest message in a thread.
     
     Args:
@@ -93,10 +91,10 @@ def get_thread_info(thread_id: str) -> dict:
     query = Query(db, f'thread:{thread_id}')
     query.set_sort(Query.SORT.NEWEST_FIRST)
     messages = query.search_messages()
-    
+
     # Get the latest message
     latest = next(messages)
-    
+
     info = {
         'message_id': latest.get_header('Message-ID'),
         'references': latest.get_header('References'),
@@ -105,14 +103,13 @@ def get_thread_info(thread_id: str) -> dict:
         'from': latest.get_header('From'),
         'reply_to': latest.get_header('Reply-To')
     }
-    
+
     db.close()
     del query
     del db
-    
+
     return info
 
-@log
 def view_thread(thread_id: str) -> str:
     db = Database(NOTMUCH_DATABASE_PATH)
     query = Query(db, f'thread:{thread_id}')

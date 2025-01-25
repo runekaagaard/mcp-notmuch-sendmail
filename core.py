@@ -2,9 +2,10 @@ import os
 import logging
 import traceback
 from functools import wraps
-from argparse import ArgumentParser
+from pathlib import Path
 
 ### Constants ###
+BASE_PATH = Path(__file__).parent
 NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
 NOTMUCH_REPLY_SEPARATORS = list(os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|"))
 SENDMAIL_FROM_EMAIL = os.environ["SENDMAIL_FROM_EMAIL"]
@@ -13,7 +14,7 @@ LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
 
 ### Logging ###
 def setup_logger():
-    if LOG_FILE_PATH:
+    if LOG_FILE_PATH is not False:
         logger = logging.getLogger('function_logger')
         fh = logging.FileHandler(LOG_FILE_PATH)
         fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -39,14 +40,3 @@ def log(func):
             raise
 
     return wrapper
-
-def parse_arguments():
-    """Parse command line arguments for the email client.
-    
-    Returns:
-        bool: True if the script should run in test mode, False otherwise
-    """
-    parser = ArgumentParser()
-    parser.add_argument('--test-html', action='store_true', help='Generate HTML from email_example.md')
-    args = parser.parse_args()
-    return args.test_html
