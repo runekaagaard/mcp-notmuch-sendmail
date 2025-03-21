@@ -9,6 +9,7 @@ Let Claude be your email assistant! MCP Notmuch Sendmail connects Claude Desktop
 - Compose new emails using markdown
 - Reply to threads with smart deduplication of quoted content
 - Create beautiful emails with LaTeX-inspired styling
+- Synchronize your email database by running a configured script
 
 Uses html2text for HTML email rendering and markdown-it for composing rich HTML emails with inline images.
 
@@ -82,6 +83,12 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   - No input required
   - Returns success/error message
 
+- **sync_emails**
+  - Synchronizes emails by running the configured script
+  - No input required
+  - Returns the script's output including stdout and stderr
+  - Only available if NOTMUCH_SYNC_SCRIPT is configured
+
 ## Usage with Claude Desktop
 
 Add to your `claude_desktop_config.json`:
@@ -97,6 +104,7 @@ Add to your `claude_desktop_config.json`:
         "NOTMUCH_REPLY_SEPARATORS": "Pipe|Separated|Phrases",
         "SENDMAIL_FROM_EMAIL": "your.email@example.com",
         "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
+        "NOTMUCH_SYNC_SCRIPT": "/path/to/your/sync/script.sh",
         "LOG_FILE_PATH": "/path/to/log/file.log"
       }
     }
@@ -110,6 +118,7 @@ Environment Variables:
 - `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
 - `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (required)
 - `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
+- `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
 
 ## Installation

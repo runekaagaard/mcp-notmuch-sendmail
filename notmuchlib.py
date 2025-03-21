@@ -1,9 +1,12 @@
-import base64, re, quopri
+import base64, re, quopri, os, subprocess
 from datetime import datetime
 from typing import Dict, Optional
 import html2text
 from notmuch import Query, Database
 from core import NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS
+
+# Optional script to sync emails
+NOTMUCH_SYNC_SCRIPT = os.environ.get("NOTMUCH_SYNC_SCRIPT", None)
 
 ### Core Functions ###
 
@@ -122,3 +125,33 @@ def view_thread(thread_id: str) -> str:
     del db
 
     return result
+
+def fetch_new_emails() -> str:
+    """Sync emails by executing the script specified in NOTMUCH_SYNC_SCRIPT.
+    
+    Returns:
+        str: Output from the script, including both stdout and stderr
+    """
+    if not NOTMUCH_SYNC_SCRIPT:
+        return "NOTMUCH_SYNC_SCRIPT environment variable not set"
+    
+    if not os.path.exists(NOTMUCH_SYNC_SCRIPT):
+        return f"Script not found: {NOTMUCH_SYNC_SCRIPT}"
+    
+    try:
+        # Check if the script is executable
+        if not os.access(NOTMUCH_SYNC_SCRIPT, os.X_OK):
+            # Try to make it executable
+            try:
+                os.chmod(NOTMUCH_SYNC_SCRIPT, 0o755)  # rwxr-xr-x
+            except Exception:
+                return f"Script is not executable and couldn't be made executable: {NOTMUCH_SYNC_SCRIPT}"
+        
+        # Execute the script directly
+        result = subprocess.run([NOTMUCH_SYNC_SCRIPT], capture_output=True, text=True)
+        output = "STDOUT:\n" + result.stdout
+        if result.stderr:
+            output += "\n\nSTDERR:\n" + result.stderr
+        return output
+    except Exception as e:
+        return f"Error executing notmuch sync script: {str(e)}"

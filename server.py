@@ -3,7 +3,7 @@ from typing import List, Optional
 from mcp.server.fastmcp import FastMCP
 
 from core import SENDMAIL_EMAIL_SIGNATURE_HTML, log
-from notmuchlib import find_threads, view_thread
+from notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
 from sendmail import compose, send
 
 mcp = FastMCP("Notmuch Email Client")
@@ -35,6 +35,12 @@ def compose_email_reply(thread_id: str, subject: str, body_as_markdown: str, to:
 @log
 def send_email() -> str:
     return send()
+
+if NOTMUCH_SYNC_SCRIPT is not None:
+    @mcp.tool(description="Sync emails by running the configured script")
+    @log
+    def sync_emails() -> str:
+        return fetch_new_emails()
 
 if __name__ == "__main__":
     mcp.run()
