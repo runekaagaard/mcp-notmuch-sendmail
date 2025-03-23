@@ -1,6 +1,6 @@
 # MCP Notmuch Sendmail
 
-**Status: Works for me but is still very beta**
+**Status: Works great and is in daily use without any known bugs.**
 
 Let Claude be your email assistant! MCP Notmuch Sendmail connects Claude Desktop to your notmuch email database, allowing it to:
 
