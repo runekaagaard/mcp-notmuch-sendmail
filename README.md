@@ -2,6 +2,8 @@
 
 **Status: Works great and is in daily use without any known bugs.**
 
+**Status2: I just added the package to PyPI and updated the usage instructions. Please report any issues :)**
+
 Let Claude be your email assistant! MCP Notmuch Sendmail connects Claude Desktop to your notmuch email database, allowing it to:
 
 - Search and browse your email threads
@@ -13,13 +15,49 @@ Let Claude be your email assistant! MCP Notmuch Sendmail connects Claude Desktop
 
 Uses html2text for HTML email rendering and markdown-it for composing rich HTML emails with inline images.
 
-![MCP Notmuch Sendmail in action](screenshot.png)
+![MCP Notmuch Sendmail in action](https://raw.githubusercontent.com/runekaagaard/mcp-notmuch-sendmail/refs/heads/main/screenshot.png)
 
-## Requirements
+## Installation
 
-- A working notmuch database setup
-- A configured sendmail command for sending emails
-- Python 3.10+
+Ensure you have uv installed:
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+## Usage with Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "email": {
+      "command": "uvx",
+      "args": ["--from", "mcp-notmuch-sendmail==2025.04.09.163948", "mcp-notmuch-sendmail"],
+      "env": {
+        "NOTMUCH_DATABASE_PATH": "/path/to/your/notmuch/db",
+        "NOTMUCH_REPLY_SEPARATORS": "Pipe|Separated|Phrases",
+        "SENDMAIL_FROM_EMAIL": "your.email@example.com",
+        "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
+        "NOTMUCH_SYNC_SCRIPT": "/path/to/your/sync/script.sh",
+        "LOG_FILE_PATH": "/path/to/log/file.log",
+        "DRAFT_DIR": "/path/for/email/drafts"
+      }
+    }
+  }
+}
+```
+
+## Environment Variables
+
+- `NOTMUCH_DATABASE_PATH`: Path to your notmuch database (required)
+- `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
+- `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (required)
+- `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
+- `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
+- `LOG_FILE_PATH`: Path for logging file (optional)
+- `DRAFT_DIR`: Directory for storing email drafts (optional, defaults to /tmp/mcp-notmuch-sendmail)
 
 ## API
 
@@ -58,8 +96,8 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   - Creates draft files and returns paths:
   ```
   Created drafts:
-  - drafts/draft.md (edit this)
-  - drafts/draft.html (preview)
+  - /path/to/draft/dir/draft.md (edit this)
+  - /path/to/draft/dir/draft.html (preview)
   ```
 
 - **compose_email_reply**
@@ -74,8 +112,8 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   - Creates draft files and returns paths:
   ```
   Created drafts:
-  - drafts/draft.md (edit this)
-  - drafts/draft.html (preview)
+  - /path/to/draft/dir/draft.md (edit this)
+  - /path/to/draft/dir/draft.html (preview)
   ```
 
 - **send_email**
@@ -88,53 +126,6 @@ Uses html2text for HTML email rendering and markdown-it for composing rich HTML 
   - No input required
   - Returns the script's output including stdout and stderr
   - Only available if NOTMUCH_SYNC_SCRIPT is configured
-
-## Usage with Claude Desktop
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "email": {
-      "command": "uv",
-      "args": ["--directory", "/path/to/mcp-notmuch-sendmail", "run", "server.py"],
-      "env": {
-        "NOTMUCH_DATABASE_PATH": "/path/to/your/notmuch/db",
-        "NOTMUCH_REPLY_SEPARATORS": "Pipe|Separated|Phrases",
-        "SENDMAIL_FROM_EMAIL": "your.email@example.com",
-        "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
-        "NOTMUCH_SYNC_SCRIPT": "/path/to/your/sync/script.sh",
-        "LOG_FILE_PATH": "/path/to/log/file.log"
-      }
-    }
-  }
-}
-```
-
-Environment Variables:
-
-- `NOTMUCH_DATABASE_PATH`: Path to your notmuch database (required)
-- `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
-- `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (required)
-- `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
-- `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
-- `LOG_FILE_PATH`: Path for logging file (optional)
-
-## Installation
-
-1. Clone repository:
-```bash
-git clone https://github.com/runekaagaard/mcp-notmuch-sendmail.git
-```
-
-2. Ensure you have uv
-```bash
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-3. Add email configuration to claude_desktop_config.json (see above)
 
 ## Reply Separators
 
