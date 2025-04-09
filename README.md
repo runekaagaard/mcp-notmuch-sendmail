@@ -34,7 +34,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "email": {
       "command": "uvx",
-      "args": ["--from", "mcp-notmuch-sendmail==2025.04.09.173726", "--python", "3.10",
+      "args": ["--from", "mcp-notmuch-sendmail==2025.04.09.174710", "--python", "3.10",
                "--refresh", "mcp-notmuch-sendmail"]
       "env": {
         "NOTMUCH_DATABASE_PATH": "/path/to/your/notmuch/db",
