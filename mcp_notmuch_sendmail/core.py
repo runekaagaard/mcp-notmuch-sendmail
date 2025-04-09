@@ -5,12 +5,16 @@ from functools import wraps
 from pathlib import Path
 
 ### Constants ###
-BASE_PATH = Path(__file__).parent
+ROOT_DIR = Path(__file__).parent
 NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
 NOTMUCH_REPLY_SEPARATORS = list(os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|"))
 SENDMAIL_FROM_EMAIL = os.environ["SENDMAIL_FROM_EMAIL"]
 SENDMAIL_EMAIL_SIGNATURE_HTML = os.environ.get("SENDMAIL_EMAIL_SIGNATURE_HTML", "")
 LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
+DRAFT_DIR = Path(os.environ.get('DRAFT_DIR', '/tmp/mcp-notmuch-sendmail'))
+
+# Create drafts directory if it doesn't exist
+DRAFT_DIR.mkdir(parents=True, exist_ok=True)
 
 ### Logging ###
 def setup_logger():

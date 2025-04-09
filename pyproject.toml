@@ -1,7 +1,7 @@
 [project]
 name = "mcp-notmuch-sendmail"
-version = "0.1.0"
-description = "MCP server that reads email with notmuch and uses semdmail for LaTeX-enhanced email composition"
+version = "2025.04.09.161356"
+description = "A MCP server that reads email with notmuch and uses sendmail for LaTeX-enhanced email composition"
 readme = "README.md"
 requires-python = "==3.10.*"
 dependencies = [
@@ -14,4 +14,36 @@ dependencies = [
     "notmuch>=0.29.2",
     "pymdown-extensions>=10.14",
     "jinja2>=3.1.5",
+]
+authors = [
+  { name="Rune Kaagaard" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license-files = ["LICENSE"]
+packages = [
+    {include = "mcp_notmuch_sendmail"}
+]
+
+[project.scripts]
+mcp-notmuch-sendmail = "mcp_notmuch_sendmail.server:main"
+
+[project.urls]
+Homepage = "https://github.com/runekaagaard/mcp-notmuch-sendmail"
+Issues = "https://github.com/runekaagaard/mcp-notmuch-sendmail/issues"
+Disussions = "https://github.com/runekaagaard/mcp-notmuch-sendmail/discussions"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+    "hatchling>=1.27.0",
 ]

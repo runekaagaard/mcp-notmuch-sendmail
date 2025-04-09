@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import List, Optional
 from mcp.server.fastmcp import FastMCP
 
-from core import SENDMAIL_EMAIL_SIGNATURE_HTML, log
-from notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
-from sendmail import compose, send
+from mcp_notmuch_sendmail.core import SENDMAIL_EMAIL_SIGNATURE_HTML, DRAFT_DIR, log
+from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
+from mcp_notmuch_sendmail.sendmail import compose, send
 
 mcp = FastMCP("Notmuch Email Client")
 
@@ -43,5 +43,10 @@ if NOTMUCH_SYNC_SCRIPT is not None:
     def sync_emails() -> str:
         return fetch_new_emails()
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the mcp-notmuch-sendmail package."""
+    print(f"Email drafts will be stored in: {DRAFT_DIR}")
     mcp.run()
+
+if __name__ == "__main__":
+    main()
