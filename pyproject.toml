@@ -1,6 +1,6 @@
 [project]
 name = "mcp-notmuch-sendmail"
-version = "2025.04.09.164411"
+version = "2025.04.09.165314"
 description = "A MCP server that reads email with notmuch and uses sendmail for LaTeX-enhanced email composition"
 readme = "README.md"
 requires-python = "==3.10.*"

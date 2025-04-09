@@ -45,7 +45,6 @@ if NOTMUCH_SYNC_SCRIPT is not None:
 
 def main():
     """Main entry point for the mcp-notmuch-sendmail package."""
-    print(f"Email drafts will be stored in: {DRAFT_DIR}")
     mcp.run()
 
 if __name__ == "__main__":
