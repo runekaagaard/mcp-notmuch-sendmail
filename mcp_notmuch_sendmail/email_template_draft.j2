@@ -1,6 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>{% if metadata.thread_info %}Reply to Email Thread{% else %}New Email{% endif %}</title>
     <style>
         {{ css }}
         /* Layout styles */
@@ -37,9 +38,6 @@
             {% endif %}
             {% if metadata.bcc %}
             <strong>Bcc:</strong> {{ metadata.bcc|join(', ') }}<br>
-            {% endif %}
-            {% if metadata.thread_info and metadata.thread_info.in_reply_to %}
-            <strong>In-Reply-To:</strong> {{ metadata.thread_info.in_reply_to }}<br>
             {% endif %}
         </div>
         {% endif %}
