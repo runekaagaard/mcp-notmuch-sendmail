@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/runekaagaard-mcp-notmuch-sendmail-badge.png)](https://mseep.ai/app/runekaagaard-mcp-notmuch-sendmail)
+
 # MCP Notmuch Sendmail
 
 **Status: Works great and is in daily use without any known bugs.**
