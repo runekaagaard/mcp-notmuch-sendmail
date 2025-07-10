@@ -20,10 +20,13 @@ def message_to_text(message):
     def extract_reply(text):
         result = []
         for line in text.splitlines():
+            # Strip whitespace for comparison but keep original line
+            stripped_line = line.strip().lower()
+            
             # Check if this line is a forward separator - if so, keep everything
             if NOTMUCH_FORWARD_SEPARATORS:
                 for forward_separator in NOTMUCH_FORWARD_SEPARATORS:
-                    if forward_separator and line.lower().startswith(forward_separator.lower()):
+                    if forward_separator and stripped_line.startswith(forward_separator.lower()):
                         # Keep everything from here on (it's a forwarded message)
                         result.append(line)
                         remaining_lines = text.split(line, 1)[1].splitlines()
@@ -32,7 +35,7 @@ def message_to_text(message):
             
             # Check if this line is a reply separator - if so, stop here
             for reply_separator in NOTMUCH_REPLY_SEPARATORS:
-                if line.lower().startswith(reply_separator.lower()):
+                if stripped_line.startswith(reply_separator.lower()):
                     return "\n".join(result).strip()
             result.append(line)
         return text
