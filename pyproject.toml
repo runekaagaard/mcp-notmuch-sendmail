@@ -14,6 +14,7 @@ dependencies = [
     "notmuch>=0.29.2",
     "pymdown-extensions>=10.14",
     "jinja2>=3.1.5",
+    "unstructured[docx,image,pdf,pptx,xlsx]>=0.18.3",
 ]
 authors = [
   { name="Rune Kaagaard" },
