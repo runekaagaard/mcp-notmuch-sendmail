@@ -281,7 +281,7 @@ cli = [
 
 [[package]]
 name = "mcp-notmuch-sendmail"
-version = "2025.4.9.91234"
+version = "2025.4.9.174710"
 source = { editable = "." }
 dependencies = [
     { name = "bs4" },

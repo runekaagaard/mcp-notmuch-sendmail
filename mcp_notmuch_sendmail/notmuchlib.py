@@ -18,26 +18,45 @@ def message_to_text(message):
         return re.sub(r'(\n\s*){2,}', '\n\n', text)
 
     def extract_reply(text):
+        # First, check if there's a forwarded message to preserve
+        forwarded_content = None
+        if NOTMUCH_FORWARD_SEPARATORS:
+            lines = text.splitlines()
+            for i, line in enumerate(lines):
+                stripped_line = line.strip().lower()
+                unquoted_line = stripped_line.lstrip('> ')
+                
+                for forward_separator in NOTMUCH_FORWARD_SEPARATORS:
+                    if forward_separator and (stripped_line.startswith(forward_separator.lower()) or 
+                                              unquoted_line.startswith(forward_separator.lower())):
+                        # Found a forward separator - extract everything from this line onwards
+                        forwarded_content = "\n".join(lines[i:])
+                        # Remove the forwarded part from the original text
+                        text = "\n".join(lines[:i])
+                        break
+                if forwarded_content:
+                    break
+        
+        # Now process the text normally for reply separators
         result = []
         for line in text.splitlines():
-            # Strip whitespace for comparison but keep original line
             stripped_line = line.strip().lower()
-            
-            # Check if this line is a forward separator - if so, keep everything
-            if NOTMUCH_FORWARD_SEPARATORS:
-                for forward_separator in NOTMUCH_FORWARD_SEPARATORS:
-                    if forward_separator and stripped_line.startswith(forward_separator.lower()):
-                        # Keep everything from here on (it's a forwarded message)
-                        result.append(line)
-                        remaining_lines = text.split(line, 1)[1].splitlines()
-                        result.extend(remaining_lines)
-                        return "\n".join(result).strip()
+            unquoted_line = stripped_line.lstrip('> ')
             
             # Check if this line is a reply separator - if so, stop here
             for reply_separator in NOTMUCH_REPLY_SEPARATORS:
-                if stripped_line.startswith(reply_separator.lower()):
+                if reply_separator and (stripped_line.startswith(reply_separator.lower()) or
+                                        unquoted_line.startswith(reply_separator.lower())):
+                    # Add the forwarded content back at the end if we found any
+                    if forwarded_content:
+                        return "\n".join(result).strip() + "\n\n" + forwarded_content
                     return "\n".join(result).strip()
             result.append(line)
+        
+        # If we didn't hit any reply separators, return the original text
+        # (with forwarded content appended if found)
+        if forwarded_content:
+            return text.strip() + "\n\n" + forwarded_content
         return text
 
     def decode_qp(text):
