@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent
 NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
 NOTMUCH_REPLY_SEPARATORS = list(os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|"))
+NOTMUCH_FORWARD_SEPARATORS = list(os.environ.get("NOTMUCH_FORWARD_SEPARATORS", "").split("|")) if os.environ.get("NOTMUCH_FORWARD_SEPARATORS") else None
 SENDMAIL_FROM_EMAIL = os.environ["SENDMAIL_FROM_EMAIL"]
 SENDMAIL_EMAIL_SIGNATURE_HTML = os.environ.get("SENDMAIL_EMAIL_SIGNATURE_HTML", "")
 LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)

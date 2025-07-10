@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, Optional
 import html2text
 from notmuch import Query, Database
-from mcp_notmuch_sendmail.core import ROOT_DIR, NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS
+from mcp_notmuch_sendmail.core import ROOT_DIR, NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS, NOTMUCH_FORWARD_SEPARATORS
 
 # Optional script to sync emails
 NOTMUCH_SYNC_SCRIPT = os.environ.get("NOTMUCH_SYNC_SCRIPT", None)
@@ -20,8 +20,19 @@ def message_to_text(message):
     def extract_reply(text):
         result = []
         for line in text.splitlines():
+            # Check if this line is a forward separator - if so, keep everything
+            if NOTMUCH_FORWARD_SEPARATORS:
+                for forward_separator in NOTMUCH_FORWARD_SEPARATORS:
+                    if forward_separator and line.lower().startswith(forward_separator.lower()):
+                        # Keep everything from here on (it's a forwarded message)
+                        result.append(line)
+                        remaining_lines = text.split(line, 1)[1].splitlines()
+                        result.extend(remaining_lines)
+                        return "\n".join(result).strip()
+            
+            # Check if this line is a reply separator - if so, stop here
             for reply_separator in NOTMUCH_REPLY_SEPARATORS:
-                if line.lower().startswith(reply_separator):
+                if line.lower().startswith(reply_separator.lower()):
                     return "\n".join(result).strip()
             result.append(line)
         return text
