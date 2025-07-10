@@ -59,6 +59,7 @@ Add to your `claude_desktop_config.json`:
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
 - `DRAFT_DIR`: Directory for storing email drafts (optional, defaults to /tmp/mcp-notmuch-sendmail)
+- `NOTMUCH_FORWARD_SEPARATORS`: Pipe-separated list of forward indicators - when these are detected, the forwarded content is preserved instead of being filtered (optional)
 
 ## API
 
@@ -160,6 +161,20 @@ Il.*ha scritto:|Da:|Inviato|A:|Oggetto:|Data:|Cc:|Cordiali saluti|Inviato da
 ```
 
 Note: Use | (pipe) to separate patterns. These are simplified patterns derived from common email clients - you may need to adjust them based on your specific needs.
+
+## Forward Separators
+
+The `NOTMUCH_FORWARD_SEPARATORS` environment variable helps preserve forwarded messages that would otherwise be filtered out by reply separators. When these patterns are detected, the content that follows is kept instead of removed.
+
+### Danish Configuration
+
+For Danish email clients, use this configuration:
+
+```
+NOTMUCH_FORWARD_SEPARATORS="Begin forwarded message:|---------- Forwarded message ----------|-----Original Message-----|Videresendt besked:|---------- Videresendt meddelelse ----------|-----Oprindelig meddelelse-----|Start på videresendt besked:"
+```
+
+This includes both English and Danish forward indicators commonly used by email clients like Apple Mail, Gmail, and Outlook.
 
 ## Contributing
 
