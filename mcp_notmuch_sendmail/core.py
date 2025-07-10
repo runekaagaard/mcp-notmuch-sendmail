@@ -12,6 +12,7 @@ SENDMAIL_FROM_EMAIL = os.environ["SENDMAIL_FROM_EMAIL"]
 SENDMAIL_EMAIL_SIGNATURE_HTML = os.environ.get("SENDMAIL_EMAIL_SIGNATURE_HTML", "")
 LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
 DRAFT_DIR = Path(os.environ.get('DRAFT_DIR', '/tmp/mcp-notmuch-sendmail'))
+READ_ATTACHMENT_PAGE_SIZE = int(os.environ.get('READ_ATTACHMENT_PAGE_SIZE', '20000'))
 
 # Create drafts directory if it doesn't exist
 DRAFT_DIR.mkdir(parents=True, exist_ok=True)

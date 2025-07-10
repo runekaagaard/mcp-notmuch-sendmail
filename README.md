@@ -8,6 +8,7 @@ Let Claude be your email assistant! MCP Notmuch Sendmail connects Claude Desktop
 
 - Search and browse your email threads
 - View conversations in a clean text format
+- Read attachments from emails with automatic text extraction
 - Compose new emails using markdown
 - Reply to threads with smart deduplication of quoted content
 - Create beautiful emails with LaTeX-inspired styling
@@ -43,7 +44,8 @@ Add to your `claude_desktop_config.json`:
         "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
         "NOTMUCH_SYNC_SCRIPT": "/path/to/your/sync/script.sh",
         "LOG_FILE_PATH": "/path/to/log/file.log",
-        "DRAFT_DIR": "/path/for/email/drafts"
+        "DRAFT_DIR": "/path/for/email/drafts",
+        "READ_ATTACHMENT_PAGE_SIZE": "20000"
       }
     }
   }
@@ -59,6 +61,7 @@ Add to your `claude_desktop_config.json`:
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
 - `DRAFT_DIR`: Directory for storing email drafts (optional, defaults to /tmp/mcp-notmuch-sendmail)
+- `READ_ATTACHMENT_PAGE_SIZE`: Maximum characters per page when reading attachments (optional, defaults to 20000)
 
 ## API
 
@@ -76,9 +79,11 @@ Add to your `claude_desktop_config.json`:
   - View all messages for an email thread
   - Input: `thread_id` (string)
   - Returns conversation in text format with HTML->text conversion
+  - Messages with attachments show an ATTACHMENTS line listing filenames
   ```
   FROM: sender@example.com
   DATE: 2024-01-25
+  ATTACHMENTS: report.pdf, data.xlsx
   Message content...
   - - -
   FROM: another@example.com
@@ -121,6 +126,22 @@ Add to your `claude_desktop_config.json`:
   - Sends the composed email draft
   - No input required
   - Returns success/error message
+
+- **read_email_attachment**
+  - Read content from an email attachment with pagination support
+  - Inputs:
+    - `thread_id` (string): Thread ID containing the attachment
+    - `filename` (string): Name of the attachment file to read
+    - `page` (int, optional): Page number for paginated reading (default: 0)
+  - Returns extracted text content with automatic format detection
+  - Supports 64+ file formats including PDF, DOCX, XLSX, PPTX, images with OCR
+  - Large files are paginated based on READ_ATTACHMENT_PAGE_SIZE
+  ```
+  Reading page 1 of 3
+  [Note: Found 2 files named 'report.pdf', reading the most recent one]
+  
+  Document content...
+  ```
 
 - **sync_emails**
   - Synchronizes emails by running the configured script
