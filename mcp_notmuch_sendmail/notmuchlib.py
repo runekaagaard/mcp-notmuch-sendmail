@@ -1,8 +1,8 @@
-import base64, re, quopri, os, subprocess
+import email, re, os, subprocess
 from datetime import datetime
 from typing import Dict, Optional
 import html2text
-from notmuch import Query, Database
+import notmuch2
 from mcp_notmuch_sendmail.core import ROOT_DIR, NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS
 
 # Optional script to sync emails
@@ -26,26 +26,23 @@ def message_to_text(message):
             result.append(line)
         return text
 
-    def decode_qp(text):
-        try:
-            return quopri.decodestring(text.encode('utf-8')).decode('utf-8')
-        except UnicodeDecodeError:
-            return quopri.decodestring(text.encode('utf-8')).decode('latin1')
-
-    from_addr = message.get_header('From').strip()
-    date_str = fmt_timestamp(message.get_date())
+    from_addr = message.header('From').strip()
+    date_str = fmt_timestamp(message.date)
 
     result = [f"FROM: {from_addr}", f"DATE: {date_str}"]
-    parts = list(message.get_message_parts())
 
-    for part in parts:
+    with message.path.open("rb") as f:
+        msg = email.message_from_binary_file(f)
+
+    for part in msg.walk():
         if part.get_content_type() == "text/html":
-            html = part.get_payload()
-            encoding = part.get('Content-Transfer-Encoding', '').lower()
-            if encoding == "base64":
-                html = base64.b64decode(html).decode("utf-8")
-            elif encoding == "quoted-printable":
-                html = decode_qp(html)
+            html_payload = part.get_payload(decode=True)
+            if html_payload is None:
+                continue
+            try:
+                html = html_payload.decode("utf-8")
+            except UnicodeDecodeError:
+                html = html_payload.decode("latin1")
             h = html2text.HTML2Text()
             h.body_width = 0
             h.emphasis_mark = ""
@@ -58,26 +55,22 @@ def message_to_text(message):
     return "\n".join(result)
 
 def find_threads(notmuch_search_query: str) -> str:
-    db = Database(NOTMUCH_DATABASE_PATH)
-    query = Query(db, notmuch_search_query)
-    query.set_sort(Query.SORT.NEWEST_FIRST)
-    threads = query.search_threads()
+    db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
+    threads = db.threads(notmuch_search_query, sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
     result = []
     for i, thread in enumerate(threads):
         if i == 25:
             break
         parts = [
-            thread.get_thread_id(),
-            fmt_timestamp(thread.get_newest_date()),
-            thread.get_subject()[:80],
-            ",".join([x.split()[0].lower() for x in thread.get_authors().split(",")])[:40],
+            str(thread.threadid),
+            fmt_timestamp(thread.last),
+            str(thread.subject)[:80],
+            ",".join([x.split()[0].lower() for x in str(thread.authors).split(",")])[:40],
         ]
         result.append("\t".join(parts))
 
     db.close()
-    del query
-    del db
 
     return "\n".join(result)
 
@@ -90,39 +83,31 @@ def get_thread_info(thread_id: str) -> Dict:
     Returns:
         dict with keys: message_id, references, in_reply_to, subject
     """
-    db = Database(NOTMUCH_DATABASE_PATH)
-    query = Query(db, f'thread:{thread_id}')
-    query.set_sort(Query.SORT.NEWEST_FIRST)
-    messages = query.search_messages()
+    db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
+    messages = db.messages(f'thread:{thread_id}', sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
     # Get the latest message
     latest = next(messages)
 
     info = {
-        'message_id': latest.get_header('Message-ID'),
-        'references': latest.get_header('References'),
-        'in_reply_to': latest.get_header('In-Reply-To'),
-        'subject': latest.get_header('Subject'),
-        'from': latest.get_header('From'),
-        'reply_to': latest.get_header('Reply-To')
+        'message_id': latest.header('Message-ID'),
+        'references': latest.header('References'),
+        'in_reply_to': latest.header('In-Reply-To'),
+        'subject': latest.header('Subject'),
+        'from': latest.header('From'),
+        'reply_to': latest.header('Reply-To')
     }
 
     db.close()
-    del query
-    del db
 
     return info
 
 def view_thread(thread_id: str) -> str:
-    db = Database(NOTMUCH_DATABASE_PATH)
-    query = Query(db, f'thread:{thread_id}')
-    query.set_sort(Query.SORT.OLDEST_FIRST)
-    messages = query.search_messages()
+    db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
+    messages = db.messages(f'thread:{thread_id}', sort=notmuch2.Database.SORT.OLDEST_FIRST)
     result = "- - -\n".join([message_to_text(message) for message in messages])
 
     db.close()
-    del query
-    del db
 
     return result
 
