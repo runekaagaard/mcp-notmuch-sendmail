@@ -292,7 +292,6 @@ dependencies = [
     { name = "mcp", extra = ["cli"] },
     { name = "mdit-py-plugins" },
     { name = "notmuch" },
-    { name = "pymdown-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -311,7 +310,6 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = "==1.2.0" },
     { name = "mdit-py-plugins", specifier = ">=0.4.2" },
     { name = "notmuch", specifier = ">=0.29.2" },
-    { name = "pymdown-extensions", specifier = ">=10.14" },
 ]
 
 [package.metadata.requires-dev]
@@ -444,19 +442,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7c/2d/c3338d48ea6cc0feb8446d8e6937e1408088a72a39937982cc6111d17f84/pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f", size = 4968581 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/0b/9fcc47d19c48b59121088dd6da2488a49d5f72dacf8262e2790a1d2c7d15/pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c", size = 1225293 },
-]
-
-[[package]]
-name = "pymdown-extensions"
-version = "10.14.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "markdown" },
-    { name = "pyyaml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/24/f7a412dc1630b1a6d7b288e7c736215ce878ee4aad24359f7f67b53bbaa9/pymdown_extensions-10.14.1.tar.gz", hash = "sha256:b65801996a0cd4f42a3110810c306c45b7313c09b0610a6f773730f2a9e3c96b", size = 845243 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/09/fb/79a8d27966e90feeeb686395c8b1bff8221727abcbd80d2485841393a955/pymdown_extensions-10.14.1-py3-none-any.whl", hash = "sha256:637951cbfbe9874ba28134fb3ce4b8bcadd6aca89ac4998ec29dcbafd554ae08", size = 264283 },
 ]
 
 [[package]]
