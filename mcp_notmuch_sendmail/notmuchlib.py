@@ -26,23 +26,31 @@ def message_to_text(message):
             result.append(line)
         return text
 
+    def decode_payload(part):
+        payload = part.get_payload(decode=True)
+        if payload is None:
+            return ''
+        charset = part.get_content_charset() or 'utf-8'
+        for encoding in (charset, 'utf-8', 'latin1'):
+            try:
+                return payload.decode(encoding)
+            except (LookupError, UnicodeDecodeError):
+                continue
+        return payload.decode('utf-8', errors='replace')
+
     from_addr = message.header('From').strip()
     date_str = fmt_timestamp(message.date)
 
     result = [f"FROM: {from_addr}", f"DATE: {date_str}"]
+    html_parts = []
+    plain_parts = []
 
     with message.path.open("rb") as f:
         msg = email.message_from_binary_file(f)
 
     for part in msg.walk():
         if part.get_content_type() == "text/html":
-            html_payload = part.get_payload(decode=True)
-            if html_payload is None:
-                continue
-            try:
-                html = html_payload.decode("utf-8")
-            except UnicodeDecodeError:
-                html = html_payload.decode("latin1")
+            html = decode_payload(part)
             h = html2text.HTML2Text()
             h.body_width = 0
             h.emphasis_mark = ""
@@ -50,7 +58,19 @@ def message_to_text(message):
             plain = h.handle(html)
             plain = normalize_empty_lines(plain)
             plain = extract_reply(plain)
-            result.append(plain)
+            if plain:
+                html_parts.append(plain)
+        elif part.get_content_type() == "text/plain":
+            plain = decode_payload(part)
+            plain = normalize_empty_lines(plain)
+            plain = extract_reply(plain)
+            if plain:
+                plain_parts.append(plain)
+
+    if html_parts:
+        result.extend(html_parts)
+    elif plain_parts:
+        result.extend(plain_parts)
 
     return "\n".join(result)
 
