@@ -50,11 +50,23 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
+## Transports
+
+By default the server speaks stdio. It can also serve over HTTP for clients that connect that way:
+
+```bash
+# Recommended HTTP transport (serves on http://HOST:PORT/mcp)
+mcp-notmuch-sendmail --transport streamable-http --host 127.0.0.1 --port 8000
+
+# Legacy SSE transport, for older clients (serves on http://HOST:PORT/sse)
+mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
+```
+
 ## Environment Variables
 
 - `NOTMUCH_DATABASE_PATH`: Path to your notmuch database (required)
 - `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
-- `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (required)
+- `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (optional - when unset, the email composing/sending tools are disabled and the server is read-only)
 - `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
@@ -77,7 +89,7 @@ Add to your `claude_desktop_config.json`:
 - **view_email_thread**
   - View all messages for an email thread
   - Input: `thread_id` (string)
-  - Returns conversation in text format with HTML->text conversion
+  - Returns conversation in text format with HTML->text conversion (falls back to text/plain parts when a message has no HTML body)
   ```
   FROM: sender@example.com
   DATE: 2024-01-25

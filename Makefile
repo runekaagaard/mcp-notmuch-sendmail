@@ -1,44 +1,61 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -ec
 
-.PHONY: publish-test publish-prod package-inspect-test package-inspect-prod package-run-test package-run-prod
+.PHONY: version-bump tests-run publish-test publish-prod package-inspect-test package-inspect-prod package-run-test package-run-prod debug-constants
 
+PROJECT := $(shell grep '^name = ' pyproject.toml | cut -d '"' -f2)
+PACKAGE := $(shell echo $(PROJECT) | tr '-' '_')
+# Pass VERSION explicitly to sub-makes: it is timestamp-based, so a re-evaluation
+# in a sub-make would produce a different version than the one committed/tagged.
 VERSION := $(shell date +%Y.%m.%d.%H%M%S)
+
+version-bump:
+	sed -i 's/$(PROJECT)==[0-9.]*"/$(PROJECT)==$(VERSION)"/g' README.md
+	sed -i "s/version = \"[^\"]*\"/version = \"$(VERSION)\"/" pyproject.toml
+	echo "$(VERSION)" > VERSION.txt
+
+tests-run:
+	uv run --group dev python -m pytest tests/ -q
 
 publish-test:
 	rm -rf dist/*
-	sed -i "s/version = \"[^\"]*\"/version = \"$(VERSION)\"/" pyproject.toml
-	sed -i "s/mcp-notmuch-sendmail==[0-9.]*\"/mcp-notmuch-sendmail==$(VERSION)\"/g" README.md
+	$(MAKE) version-bump VERSION=$(VERSION)
 	uv build
 	uv publish --token "$$PYPI_TOKEN_TEST" --publish-url https://test.pypi.org/legacy/
-	git checkout README.md pyproject.toml
+	git checkout README.md pyproject.toml VERSION.txt
 
-publish-prod:
+publish-prod: tests-run
 	rm -rf dist/*
-	echo "$(VERSION)" > VERSION.txt
-	sed -i "s/version = \"[^\"]*\"/version = \"$(VERSION)\"/" pyproject.toml
-	sed -i "s/mcp-notmuch-sendmail==[0-9.]*\"/mcp-notmuch-sendmail==$(VERSION)\"/g" README.md
+	$(MAKE) version-bump VERSION=$(VERSION)
 	uv build
+	uv lock
 	uv publish --token "$$PYPI_TOKEN_PROD"
 	git commit -am "Published version $(VERSION) to PyPI"
+	git tag "v$(VERSION)"
 	git push
+	git push origin "v$(VERSION)"
 
 package-inspect-test:
-	rm -rf /tmp/test-mcp-notmuch-sendmail
-	uv venv /tmp/test-mcp-notmuch-sendmail --python 3.10
-	source /tmp/test-mcp-notmuch-sendmail/bin/activate && uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mcp-notmuch-sendmail
-	tree /tmp/test-mcp-notmuch-sendmail/lib/python3.10/site-packages/mcp_notmuch_sendmail
-	source /tmp/test-mcp-notmuch-sendmail/bin/activate && which mcp-notmuch-sendmail
+	rm -rf /tmp/test-$(PROJECT)
+	uv venv /tmp/test-$(PROJECT) --python 3.10
+	source /tmp/test-$(PROJECT)/bin/activate && uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ $(PROJECT)
+	tree /tmp/test-$(PROJECT)/lib/python3.10/site-packages/$(PACKAGE)
+	source /tmp/test-$(PROJECT)/bin/activate && which $(PROJECT)
 
 package-inspect-prod:
-	rm -rf /tmp/test-mcp-notmuch-sendmail
-	uv venv /tmp/test-mcp-notmuch-sendmail --python 3.10
-	source /tmp/test-mcp-notmuch-sendmail/bin/activate && uv pip install mcp-notmuch-sendmail
-	tree /tmp/test-mcp-notmuch-sendmail/lib/python3.10/site-packages/mcp_notmuch_sendmail
-	source /tmp/test-mcp-notmuch-sendmail/bin/activate && which mcp-notmuch-sendmail
+	rm -rf /tmp/test-$(PROJECT)
+	uv venv /tmp/test-$(PROJECT) --python 3.10
+	source /tmp/test-$(PROJECT)/bin/activate && uv pip install $(PROJECT)
+	tree /tmp/test-$(PROJECT)/lib/python3.10/site-packages/$(PACKAGE)
+	source /tmp/test-$(PROJECT)/bin/activate && which $(PROJECT)
 
 package-run-test:
-	uvx --default-index https://test.pypi.org/simple/ --index https://pypi.org/simple/ --from mcp-notmuch-sendmail mcp-notmuch-sendmail
+	uvx --default-index https://test.pypi.org/simple/ --index https://pypi.org/simple/ --from $(PROJECT) $(PROJECT)
 
 package-run-prod:
-	uvx --from mcp-notmuch-sendmail mcp-notmuch-sendmail
+	uvx --from $(PROJECT) $(PROJECT)
+
+debug-constants:
+	@echo "PROJECT='$(PROJECT)'"
+	@echo "PACKAGE='$(PACKAGE)'"
+	@echo "VERSION='$(VERSION)'"

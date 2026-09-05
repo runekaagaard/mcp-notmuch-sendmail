@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import List, Optional
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from mcp_notmuch_sendmail.core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML, DRAFT_DIR, log
 from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
 from mcp_notmuch_sendmail.sendmail import compose, send
 
-mcp = FastMCP("Notmuch Email Client")
+mcp = MCPServer("Notmuch Email Client")
 
 SIGNATURE_NOTE = ". NEVER write an email signature, it will be automatically added after your content!" if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
 
@@ -48,7 +48,19 @@ if NOTMUCH_SYNC_SCRIPT is not None:
 
 def main():
     """Main entry point for the mcp-notmuch-sendmail package."""
-    mcp.run()
+    import argparse
+    parser = argparse.ArgumentParser(description="MCP Notmuch Sendmail Server")
+    parser.add_argument("--transport", choices=["stdio", "streamable-http", "sse"], default="stdio",
+                        help="Transport type (default: stdio). streamable-http is the recommended HTTP "
+                             "transport, sse is supported for legacy clients.")
+    parser.add_argument("--host", default="127.0.0.1", help="Host for HTTP transports (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP transports (default: 8000)")
+    args = parser.parse_args()
+
+    if args.transport == "stdio":
+        mcp.run(transport="stdio")
+    else:
+        mcp.run(transport=args.transport, host=args.host, port=args.port)
 
 if __name__ == "__main__":
     main()
