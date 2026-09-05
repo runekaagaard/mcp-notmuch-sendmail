@@ -74,7 +74,7 @@ def message_to_text(message):
 
     return "\n".join(result)
 
-def find_threads(notmuch_search_query: str, max_threads: int) -> str:
+def find_threads(notmuch_search_query: str, max_threads: int = 25) -> str:
     db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
     threads = db.threads(notmuch_search_query, sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
