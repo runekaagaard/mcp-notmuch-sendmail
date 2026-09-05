@@ -54,13 +54,13 @@ def message_to_text(message):
 
     return "\n".join(result)
 
-def find_threads(notmuch_search_query: str) -> str:
+def find_threads(notmuch_search_query: str, max_threads: int) -> str:
     db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
     threads = db.threads(notmuch_search_query, sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
     result = []
     for i, thread in enumerate(threads):
-        if i == 25:
+        if i == max_threads:
             break
         parts = [
             str(thread.threadid),

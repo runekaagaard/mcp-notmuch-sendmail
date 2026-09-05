@@ -66,7 +66,9 @@ Add to your `claude_desktop_config.json`:
 
 - **find_email_thread**
   - Find email threads in the notmuch database
-  - Input: `notmuch_search_query` (string)
+  - Inputs:
+    - `notmuch_search_query` (string): The notmuch search query
+    - `max_threads` (int, optional): Maximum number of threads to return (default: 25)
   - Returns tab-separated list of threads with format:
   ```
   thread_id    date    subject    authors

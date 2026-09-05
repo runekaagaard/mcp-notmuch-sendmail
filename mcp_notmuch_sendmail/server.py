@@ -10,10 +10,12 @@ mcp = FastMCP("Notmuch Email Client")
 
 SIGNATURE_NOTE = ". NEVER write an email signature, it will be automatically added after your content!" if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
 
-@mcp.tool(description="Find email threads in the notmuch database")
+@mcp.tool(description="Find email threads in the notmuch database. "
+                      "Returns tab-separated list with thread_id, date, subject, authors. "
+                      "Use max_threads to control how many results are returned (default: 25).")
 @log
-def find_email_thread(notmuch_search_query: str) -> str:
-    return find_threads(notmuch_search_query)
+def find_email_thread(notmuch_search_query: str, max_threads: int = 25) -> str:
+    return find_threads(notmuch_search_query, max_threads)
 
 @mcp.tool(description="View all messages for an email thread")
 def view_email_thread(thread_id: str) -> str:
