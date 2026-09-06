@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import List, Optional
-from mcp.server.mcpserver import MCPServer
+try:
+    from mcp.server.mcpserver import MCPServer
+except ModuleNotFoundError:
+    from mcp.server import FastMCP as MCPServer
 
 from mcp_notmuch_sendmail.core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML, DRAFT_DIR, log
 from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
