@@ -62,7 +62,22 @@ def main():
 
     if args.transport == "stdio":
         mcp.run(transport="stdio")
+        return
+
+    from importlib.metadata import version
+    if version("mcp").split(".")[0] == "1":
+        # mcp SDK 1.x: host/port are configured via settings, not run() kwargs.
+        # streamable-http needs SDK >= 1.8; on older versions run() raises ValueError.
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        try:
+            mcp.run(transport=args.transport)
+        except ValueError:
+            import sys
+            sys.exit(f"Transport '{args.transport}' is not supported by the installed mcp SDK. "
+                     "Upgrade with 'pip install -U mcp' or use --transport sse.")
     else:
+        # mcp SDK 2.x
         mcp.run(transport=args.transport, host=args.host, port=args.port)
 
 if __name__ == "__main__":
