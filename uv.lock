@@ -375,7 +375,7 @@ cli = [
 
 [[package]]
 name = "mcp-notmuch-sendmail"
-version = "2026.9.5.185614"
+version = "2026.9.10.84837"
 source = { editable = "." }
 dependencies = [
     { name = "bs4" },
@@ -400,7 +400,7 @@ requires-dist = [
     { name = "html2text", specifier = ">=2024.2.26" },
     { name = "jinja2", specifier = ">=3.1.5" },
     { name = "markdown", specifier = ">=3.7" },
-    { name = "mcp", extras = ["cli"], specifier = "==2.1.1" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.2.0" },
     { name = "mdit-py-plugins", specifier = ">=0.4.2" },
     { name = "notmuch2", specifier = ">=0.34" },
 ]
