@@ -157,3 +157,113 @@ class TestSend:
         with patch("mcp_notmuch_sendmail.sendmail.DRAFT_DIR", tmp_path):
             with pytest.raises(ValueError, match="No draft found"):
                 send()
+
+
+class TestInlineImageAllowlist:
+    """Local images in markdown are only embedded from SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES."""
+
+    def _allow(self, monkeypatch, *dirs):
+        monkeypatch.setattr("mcp_notmuch_sendmail.sendmail.SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES",
+                            [Path(d) for d in dirs])
+
+    def test_allowed_image_is_embedded_as_cid(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch, tmp_path)
+        img = tmp_path / "chart.png"
+        img.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+        html, images = markdown_to_html(f"![chart]({img})")
+        assert "cid:" in html
+        assert list(images.values()) == [img]
+
+    def test_disabled_by_default(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch)  # empty allowlist = unset
+        img = tmp_path / "chart.png"
+        img.write_bytes(b"fake")
+        try:
+            markdown_to_html(f"![chart]({img})")
+            assert False, "should have raised"
+        except ValueError as e:
+            assert "SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES" in str(e)
+
+    def test_image_outside_allowlist_is_refused(self, monkeypatch, tmp_path):
+        allowed = tmp_path / "allowed"
+        allowed.mkdir()
+        self._allow(monkeypatch, allowed)
+        outside = tmp_path / "secret.png"
+        outside.write_bytes(b"fake")
+        try:
+            markdown_to_html(f"![x]({outside})")
+            assert False, "should have raised"
+        except ValueError as e:
+            assert "not inside" in str(e)
+
+    def test_dotdot_cannot_escape_allowlist(self, monkeypatch, tmp_path):
+        allowed = tmp_path / "allowed"
+        allowed.mkdir()
+        self._allow(monkeypatch, allowed)
+        outside = tmp_path / "secret.png"
+        outside.write_bytes(b"fake")
+        try:
+            markdown_to_html(f"![x]({allowed}/../secret.png)")
+            assert False, "should have raised"
+        except ValueError as e:
+            assert "not inside" in str(e)
+
+    def test_relative_path_is_refused(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch, tmp_path)
+        try:
+            markdown_to_html("![x](chart.png)")
+            assert False, "should have raised"
+        except ValueError as e:
+            assert "absolute" in str(e)
+
+    def test_missing_image_is_an_error_not_silent(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch, tmp_path)
+        try:
+            markdown_to_html(f"![x]({tmp_path}/nope.png)")
+            assert False, "should have raised"
+        except ValueError as e:
+            assert "not found" in str(e)
+
+    def test_remote_and_data_uris_untouched(self, monkeypatch):
+        self._allow(monkeypatch)  # even with embedding disabled
+        html, images = markdown_to_html(
+            "![a](https://example.com/a.png) ![b](data:image/png;base64,AAAA)")
+        assert images == {}
+        assert "https://example.com/a.png" in html
+
+    def test_markdown_without_images_unaffected(self, monkeypatch):
+        self._allow(monkeypatch)  # embedding disabled
+        html, images = markdown_to_html("just **text**")
+        assert images == {}
+
+    def test_compose_returns_error_string_instead_of_raising(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch)  # disabled
+        img = tmp_path / "x.png"
+        img.write_bytes(b"fake")
+        with patch("mcp_notmuch_sendmail.sendmail.DRAFT_DIR", tmp_path / "drafts"):
+            result = compose("Subject", f"![x]({img})", ["a@b.com"])
+        assert result.startswith("Error:")
+        assert "SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES" in result
+
+    def test_send_embeds_image_as_inline_mime_part(self, monkeypatch, tmp_path):
+        self._allow(monkeypatch, tmp_path)
+        img = tmp_path / "dot.png"
+        img.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+        drafts = tmp_path / "drafts"
+        with patch("mcp_notmuch_sendmail.sendmail.DRAFT_DIR", drafts):
+            compose("Subject", f"![dot]({img})", ["a@b.com"])
+            sent = {}
+
+            def fake_run(cmd, input=None, **kwargs):
+                sent["message"] = input
+
+                class R:
+                    returncode = 0
+                return R()
+
+            with patch("mcp_notmuch_sendmail.sendmail.subprocess.run", fake_run):
+                result = send()
+        assert result == "Email sent successfully"
+        assert "Content-ID:" in sent["message"]
+        assert "Content-Disposition: inline" in sent["message"]
+        assert 'Content-Type: image/png' in sent["message"]

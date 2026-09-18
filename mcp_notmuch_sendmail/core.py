@@ -10,6 +10,13 @@ NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
 NOTMUCH_REPLY_SEPARATORS = list(os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|"))
 SENDMAIL_FROM_EMAIL = os.environ.get("SENDMAIL_FROM_EMAIL", "")
 SENDMAIL_EMAIL_SIGNATURE_HTML = os.environ.get("SENDMAIL_EMAIL_SIGNATURE_HTML", "")
+# Directories from which the model may read files to embed/attach in outgoing emails
+# (secure by default - inline image embedding is disabled if not set)
+SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES = [
+    Path(d.strip()).expanduser().resolve()
+    for d in os.environ.get("SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES", "").split(",")
+    if d.strip()
+]
 LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', False)
 DRAFT_DIR = Path(os.environ.get('DRAFT_DIR', '/tmp/mcp-notmuch-sendmail'))
 

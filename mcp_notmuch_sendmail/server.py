@@ -5,13 +5,18 @@ try:
 except ModuleNotFoundError:
     from mcp.server import FastMCP as MCPServer
 
-from mcp_notmuch_sendmail.core import SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML, DRAFT_DIR, log
+from mcp_notmuch_sendmail.core import (SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML,
+                                       SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES, DRAFT_DIR, log)
 from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
 from mcp_notmuch_sendmail.sendmail import compose, send
 
 mcp = MCPServer("Notmuch Email Client")
 
 SIGNATURE_NOTE = ". NEVER write an email signature, it will be automatically added after your content!" if SENDMAIL_EMAIL_SIGNATURE_HTML else ""
+
+IMAGE_NOTE = (". You can embed inline images with markdown image syntax using absolute local file paths "
+              "inside SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES, e.g. ![chart](/path/to/chart.png)"
+             ) if SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES else ""
 
 @mcp.tool(description="Find email threads in the notmuch database. "
                       "Returns tab-separated list with thread_id, date, subject, authors. "
@@ -25,13 +30,13 @@ def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
 
 if SENDMAIL_FROM_EMAIL:
-    @mcp.tool(description=f"Compose a new email draft from markdown{SIGNATURE_NOTE}")
+    @mcp.tool(description=f"Compose a new email draft from markdown{IMAGE_NOTE}{SIGNATURE_NOTE}")
     @log
     def compose_new_email(subject: str, body_as_markdown: str, to: List[str], cc: Optional[List[str]] = None,
                           bcc: Optional[List[str]] = None) -> str:
         return compose(subject, body_as_markdown, to, cc, bcc, thread_id=None)
 
-    @mcp.tool(description=f"Compose a reply to an existing email thread{SIGNATURE_NOTE}")
+    @mcp.tool(description=f"Compose a reply to an existing email thread{IMAGE_NOTE}{SIGNATURE_NOTE}")
     @log
     def compose_email_reply(thread_id: str, subject: str, body_as_markdown: str, to: List[str],
                             cc: Optional[List[str]] = None, bcc: Optional[List[str]] = None) -> str:

@@ -13,12 +13,36 @@ from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 
 ### Constants ###
-from mcp_notmuch_sendmail.core import ROOT_DIR, DRAFT_DIR, SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML
+from mcp_notmuch_sendmail.core import (ROOT_DIR, DRAFT_DIR, SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML,
+                                       SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES)
 
 MARKDOWN_IT_FEATURES = ["table", "strikethrough"]
 MARKDOWN_IT_PLUGINS = [deflist_plugin, footnote_plugin, tasklists_plugin]
 
 ### Core Functions ###
+
+def validate_image_path(src: str) -> tuple[Optional[str], Optional[Path]]:
+    """Validate a local image path from markdown against SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES.
+
+    Returns (None, resolved_path) on success, (error_message, None) on failure.
+    """
+    if not SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES:
+        return (f"Inline image '{src}' refused: image embedding is disabled. "
+                "Set SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES to enable it.", None)
+
+    path = Path(src).expanduser()
+    if not path.is_absolute():
+        return f"Inline image '{src}' refused: path must be absolute.", None
+
+    path = path.resolve()
+    if not any(path.is_relative_to(allowed) for allowed in SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES):
+        return f"Inline image '{src}' refused: not inside SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES.", None
+
+    if not path.is_file():
+        return f"Inline image '{src}' not found.", None
+
+    return None, path
+
 
 def create_draft(markdown_text: str, metadata: Dict, thread_info: Optional[Dict] = None) -> Dict:
     """Creates a draft from markdown content and metadata."""
@@ -56,15 +80,16 @@ def markdown_to_html(markdown_text: str, css_path: Optional[Path] = None, extra_
 
     for img in imgs:
         src = img['src']
-        if src.startswith('data:'):
+        if src.startswith('data:') or src.startswith('http'):
             continue
-        elif not src.startswith('http'):
-            content_id = f"{hashlib.md5(src.encode('utf-8')).hexdigest()[:6]}_{Path(src).name}"
-            img_path = ROOT_DIR / src
 
-            if img_path.exists():
-                images[content_id] = img_path
-                img['src'] = f'cid:{content_id}'
+        error, img_path = validate_image_path(src)
+        if error:
+            raise ValueError(error)
+
+        content_id = f"{hashlib.md5(src.encode('utf-8')).hexdigest()[:6]}_{img_path.name}"
+        images[content_id] = img_path
+        img['src'] = f'cid:{content_id}'
 
     html_content = str(soup)
 
@@ -93,9 +118,12 @@ def compose(subject: str, body_as_markdown: str, to: List[str], cc: Optional[Lis
         'bcc': bcc or [],
         'thread_info': thread_info
     }
-    draft = create_draft(
-        markdown_text=body_as_markdown,
-        metadata=metadata)
+    try:
+        draft = create_draft(
+            markdown_text=body_as_markdown,
+            metadata=metadata)
+    except ValueError as e:
+        return f"Error: {e}"
     return f"Created drafts:\n- {draft['markdown']} (edit this)\n- {draft['html']} (preview)"
 
 def send():
@@ -109,7 +137,10 @@ def send():
     body_as_markdown = md_path.read_text()
     metadata = json.loads(metadata_path.read_text())
     css_path = ROOT_DIR / 'latex.css'
-    html, images = markdown_to_html(body_as_markdown, css_path=css_path)
+    try:
+        html, images = markdown_to_html(body_as_markdown, css_path=css_path)
+    except ValueError as e:
+        return f"Error: {e}"
 
     # Create email message
     msg = MIMEMultipart('alternative')
