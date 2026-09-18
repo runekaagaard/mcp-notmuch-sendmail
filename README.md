@@ -39,6 +39,7 @@ Add to your `claude_desktop_config.json`:
         "NOTMUCH_REPLY_SEPARATORS": "Pipe|Separated|Phrases",
         "SENDMAIL_FROM_EMAIL": "your.email@example.com",
         "SENDMAIL_EMAIL_SIGNATURE_HTML": "<p>Optional HTML signature</p>",
+        "SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES": "/path/to/images,/another/path",
         "NOTMUCH_SYNC_SCRIPT": "/path/to/your/sync/script.sh",
         "LOG_FILE_PATH": "/path/to/log/file.log",
         "DRAFT_DIR": "/path/for/email/drafts"
@@ -66,6 +67,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
 - `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
 - `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (optional - when unset, the email composing/sending tools are disabled and the server is read-only)
 - `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
+- `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`: Comma-separated list of directories from which images referenced in markdown may be embedded into outgoing emails (optional - inline image embedding is disabled if not set)
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
 - `DRAFT_DIR`: Directory for storing email drafts (optional, defaults to /tmp/mcp-notmuch-sendmail)
@@ -100,6 +102,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
 
 - **compose_new_email**
   - Compose a new email draft from markdown. A signature will be automatically added if SENDMAIL_EMAIL_SIGNATURE_HTML is set.
+  - Markdown image syntax with an absolute local file path (e.g. `![chart](/path/to/chart.png)`) embeds the image inline in the email. Requires the path to be inside `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`; remote `http(s)` image URLs are left as-is.
   - Inputs:
     - `subject` (string): Email subject
     - `body_as_markdown` (string): Email body in markdown
