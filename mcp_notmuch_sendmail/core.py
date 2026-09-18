@@ -7,7 +7,9 @@ from pathlib import Path
 ### Constants ###
 ROOT_DIR = Path(__file__).parent
 NOTMUCH_DATABASE_PATH = os.environ["NOTMUCH_DATABASE_PATH"]
-NOTMUCH_REPLY_SEPARATORS = list(os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|"))
+NOTMUCH_REPLY_SEPARATORS = [sep for sep in os.environ["NOTMUCH_REPLY_SEPARATORS"].split("|") if sep.strip()]
+NOTMUCH_FORWARD_SEPARATORS = [
+    sep for sep in os.environ.get("NOTMUCH_FORWARD_SEPARATORS", "").split("|") if sep.strip()]
 SENDMAIL_FROM_EMAIL = os.environ.get("SENDMAIL_FROM_EMAIL", "")
 SENDMAIL_EMAIL_SIGNATURE_HTML = os.environ.get("SENDMAIL_EMAIL_SIGNATURE_HTML", "")
 # Directories from which the model may read files to embed/attach in outgoing emails
