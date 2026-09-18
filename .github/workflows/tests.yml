@@ -25,8 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install libnotmuch (runtime dependency of the notmuch2 python bindings)
-        run: sudo apt-get update && sudo apt-get install -y notmuch
+      - name: Install libnotmuch headers (the notmuch2 python bindings compile against them)
+        run: sudo apt-get update && sudo apt-get install -y libnotmuch-dev
       - name: Install package and test dependencies
         run: |
           pip install . pytest
