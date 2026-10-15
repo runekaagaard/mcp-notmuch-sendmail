@@ -13,7 +13,7 @@ NOTMUCH_SYNC_SCRIPT = os.environ.get("NOTMUCH_SYNC_SCRIPT", None)
 def fmt_timestamp(timestamp):
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
 
-def message_to_text(message):
+def message_to_text(message, full=False):
     def normalize_empty_lines(text):
         return re.sub(r'(\n\s*){2,}', '\n\n', text)
 
@@ -57,13 +57,15 @@ def message_to_text(message):
             h.strong_mark = ""
             plain = h.handle(html)
             plain = normalize_empty_lines(plain)
-            plain = extract_reply(plain)
+            if not full:
+                plain = extract_reply(plain)
             if plain:
                 html_parts.append(plain)
         elif part.get_content_type() == "text/plain":
             plain = decode_payload(part)
             plain = normalize_empty_lines(plain)
-            plain = extract_reply(plain)
+            if not full:
+                plain = extract_reply(plain)
             if plain:
                 plain_parts.append(plain)
 
@@ -122,10 +124,10 @@ def get_thread_info(thread_id: str) -> Dict:
 
     return info
 
-def view_thread(thread_id: str) -> str:
+def view_thread(thread_id: str, full: bool = False) -> str:
     db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
     messages = db.messages(f'thread:{thread_id}', sort=notmuch2.Database.SORT.OLDEST_FIRST)
-    result = "- - -\n".join([message_to_text(message) for message in messages])
+    result = "- - -\n".join([message_to_text(message, full) for message in messages])
 
     db.close()
 

@@ -248,3 +248,10 @@ def test_get_thread_info_returns_dict():
 
     assert "message_id" in result
     assert result["subject"] == "Test Subject"
+
+
+def test_full_keeps_quoted_replies():
+    mime = _build_mime("<p>new text</p><p>from: bob@example.com</p><p>the quoted history</p>")
+    msg = _make_fake_message("alice@example.com", 1706140800, mime)
+    assert "the quoted history" not in nm_lib.message_to_text(msg)
+    assert "the quoted history" in nm_lib.message_to_text(msg, full=True)

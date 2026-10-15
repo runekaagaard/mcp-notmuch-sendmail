@@ -25,9 +25,10 @@ IMAGE_NOTE = (". You can embed inline images with markdown image syntax using ab
 def find_email_thread(notmuch_search_query: str, max_threads: int = 25) -> str:
     return find_threads(notmuch_search_query, max_threads)
 
-@mcp.tool(description="View all messages for an email thread")
-def view_email_thread(thread_id: str) -> str:
-    return view_thread(thread_id)
+@mcp.tool(description="View all messages for an email thread. Quoted replies are pruned away; "
+                      "pass full=true to read the messages in full, quoted replies included, if context seems to be missing.")
+def view_email_thread(thread_id: str, full: bool = False) -> str:
+    return view_thread(thread_id, full)
 
 if SENDMAIL_FROM_EMAIL:
     @mcp.tool(description=f"Compose a new email draft from markdown{IMAGE_NOTE}{SIGNATURE_NOTE}")
