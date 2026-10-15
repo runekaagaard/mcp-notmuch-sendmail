@@ -90,7 +90,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
   - View all messages for an email thread
   - Inputs:
     - `thread_id` (string)
-    - `unpruned` (bool, optional): read the messages in full, with quoted replies, when the pruned view seems to be missing context
+    - `full` (bool, optional): read the messages in full, quoted replies included, when the default view seems to be missing context
   - Returns conversation in text format with HTML->text conversion (falls back to text/plain parts when a message has no HTML body)
   ```
   FROM: sender@example.com
