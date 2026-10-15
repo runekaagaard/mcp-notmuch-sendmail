@@ -89,7 +89,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
 - **view_email_thread**
   - View all messages for an email thread
   - Input: `thread_id` (string)
-  - Returns conversation in text format with HTML->text conversion (falls back to text/plain parts when a message has no HTML body)
+  - Returns conversation in text format with HTML->text conversion (falls back to text/plain parts when a message has no HTML body). Images and attachments are listed per message as `[image: name]` and `[attachment: name]`
   ```
   FROM: sender@example.com
   DATE: 2024-01-25
@@ -99,6 +99,11 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
   DATE: 2024-01-24
   Earlier message...
   ```
+
+- **view_email_image**
+  - Shows an image from a thread, inline or attached, so the model can see it
+  - Inputs: `thread_id` (string), `filename` (string): the name listed as `[image: name]` by view_email_thread
+  - Returns the image (max 5 MB), or an error message
 
 - **compose_new_email**
   - Compose a new email draft from markdown. A signature will be automatically added if SENDMAIL_EMAIL_SIGNATURE_HTML is set.
