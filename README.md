@@ -70,7 +70,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
 - `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`: Comma-separated list of directories from which images referenced in markdown may be embedded into outgoing emails (optional - inline image embedding is disabled if not set)
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
-- `DRAFT_DIR`: Directory for storing email drafts (optional, defaults to /tmp/mcp-notmuch-sendmail)
+- `DRAFT_DIR`: Directory for email drafts, each draft gets its own subdirectory (optional, defaults to /tmp/mcp-notmuch-sendmail)
 
 ## API
 
@@ -105,15 +105,17 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
   - Markdown image syntax with an absolute local file path (e.g. `![chart](/path/to/chart.png)`) embeds the image inline in the email. Requires the path to be inside `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`; remote `http(s)` image URLs are left as-is.
   - Inputs:
     - `subject` (string): Email subject
-    - `body_as_markdown` (string): Email body in markdown
+    - `body_as_markdown` (string, optional): Email body in markdown
+    - `body_file` (string, optional): Path to a markdown file to use as the body instead (inside `DRAFT_DIR` or `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`)
     - `to` (list): Recipient email addresses
     - `cc` (list, optional): CC recipients
     - `bcc` (list, optional): BCC recipients
-  - Creates draft files and returns paths:
+  - Creates the draft in its own directory and returns the paths:
   ```
-  Created drafts:
-  - /path/to/draft/dir/draft.md (edit this)
-  - /path/to/draft/dir/draft.html (preview)
+  Created draft /tmp/mcp-notmuch-sendmail/draft-k3j2x
+  - /tmp/mcp-notmuch-sendmail/draft-k3j2x/draft.md (edit this directly, then call update_preview)
+  - /tmp/mcp-notmuch-sendmail/draft-k3j2x/draft.html (preview)
+  Send with send_email("/tmp/mcp-notmuch-sendmail/draft-k3j2x")
   ```
 
 - **compose_email_reply**
@@ -121,20 +123,27 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
   - Inputs:
     - `thread_id` (string): Thread ID to reply to
     - `subject` (string): Email subject
-    - `body_as_markdown` (string): Email body in markdown
+    - `body_as_markdown` (string, optional): Email body in markdown
+    - `body_file` (string, optional): Path to a markdown file to use as the body instead (inside `DRAFT_DIR` or `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`)
     - `to` (list): Recipient email addresses
     - `cc` (list, optional): CC recipients
     - `bcc` (list, optional): BCC recipients
-  - Creates draft files and returns paths:
+  - Creates the draft in its own directory and returns the paths:
   ```
-  Created drafts:
-  - /path/to/draft/dir/draft.md (edit this)
-  - /path/to/draft/dir/draft.html (preview)
+  Created draft /tmp/mcp-notmuch-sendmail/draft-k3j2x
+  - /tmp/mcp-notmuch-sendmail/draft-k3j2x/draft.md (edit this directly, then call update_preview)
+  - /tmp/mcp-notmuch-sendmail/draft-k3j2x/draft.html (preview)
+  Send with send_email("/tmp/mcp-notmuch-sendmail/draft-k3j2x")
   ```
 
+- **update_preview**
+  - Re-renders a draft's HTML preview after its draft.md was edited directly
+  - Input: `draft` (string): the draft directory or draft.md path
+  - Returns the path of the updated preview
+
 - **send_email**
-  - Sends the composed email draft
-  - No input required
+  - Sends a composed draft. A draft can only be sent once.
+  - Input: `draft` (string): the draft directory or draft.md path returned by compose
   - Returns success/error message
 
 - **sync_emails**
