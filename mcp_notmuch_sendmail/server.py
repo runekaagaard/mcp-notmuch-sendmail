@@ -8,7 +8,7 @@ except ModuleNotFoundError:
 from mcp_notmuch_sendmail.core import (SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML,
                                        SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES, DRAFT_DIR, log)
 from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
-from mcp_notmuch_sendmail.sendmail import compose, send
+from mcp_notmuch_sendmail.sendmail import compose, send, update_preview as update_preview_draft
 
 mcp = MCPServer("Notmuch Email Client")
 
@@ -30,22 +30,34 @@ def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
 
 if SENDMAIL_FROM_EMAIL:
-    @mcp.tool(description=f"Compose a new email draft from markdown{IMAGE_NOTE}{SIGNATURE_NOTE}")
+    DRAFT_NOTE = (". The body is body_as_markdown or body_file, a markdown file to read it from. Returns the "
+                  "draft directory; draft.md in it can be edited directly (call update_preview afterwards)")
+
+    @mcp.tool(description=f"Compose a new email draft from markdown{DRAFT_NOTE}{IMAGE_NOTE}{SIGNATURE_NOTE}")
     @log
-    def compose_new_email(subject: str, body_as_markdown: str, to: List[str], cc: Optional[List[str]] = None,
+    def compose_new_email(subject: str, to: List[str], body_as_markdown: Optional[str] = None,
+                          body_file: Optional[str] = None, cc: Optional[List[str]] = None,
                           bcc: Optional[List[str]] = None) -> str:
-        return compose(subject, body_as_markdown, to, cc, bcc, thread_id=None)
+        return compose(subject, body_as_markdown, to, cc, bcc, thread_id=None, body_file=body_file)
 
-    @mcp.tool(description=f"Compose a reply to an existing email thread{IMAGE_NOTE}{SIGNATURE_NOTE}")
+    @mcp.tool(description=f"Compose a reply to an existing email thread{DRAFT_NOTE}{IMAGE_NOTE}{SIGNATURE_NOTE}")
     @log
-    def compose_email_reply(thread_id: str, subject: str, body_as_markdown: str, to: List[str],
-                            cc: Optional[List[str]] = None, bcc: Optional[List[str]] = None) -> str:
-        return compose(subject, body_as_markdown, to, cc, bcc, thread_id)
+    def compose_email_reply(thread_id: str, subject: str, to: List[str], body_as_markdown: Optional[str] = None,
+                            body_file: Optional[str] = None, cc: Optional[List[str]] = None,
+                            bcc: Optional[List[str]] = None) -> str:
+        return compose(subject, body_as_markdown, to, cc, bcc, thread_id, body_file=body_file)
 
-    @mcp.tool(description="Sends the composed email draft")
+    @mcp.tool(description="Re-render a draft's HTML preview after editing its draft.md directly. "
+                          "Pass the draft directory or draft.md path.")
     @log
-    def send_email() -> str:
-        return send()
+    def update_preview(draft: str) -> str:
+        return update_preview_draft(draft)
+
+    @mcp.tool(description="Send a composed draft. Pass the draft directory or draft.md path from compose. "
+                          "A draft can only be sent once.")
+    @log
+    def send_email(draft: str) -> str:
+        return send(draft)
 
 if NOTMUCH_SYNC_SCRIPT is not None:
 
