@@ -67,6 +67,7 @@ mcp-notmuch-sendmail --transport sse --host 127.0.0.1 --port 8000
 - `NOTMUCH_REPLY_SEPARATORS`: Pipe-separated list of text markers - keeps email content up until the first line starting with any of these markers, removing quoted replies (required)
 - `SENDMAIL_FROM_EMAIL`: Your email address for the From: field (optional - when unset, the email composing/sending tools are disabled and the server is read-only)
 - `SENDMAIL_EMAIL_SIGNATURE_HTML`: HTML signature to append to emails (optional)
+- `NOTMUCH_FORWARD_SEPARATORS`: Pipe-separated list of forward indicators (e.g. `Begin forwarded message:`) - content after these is preserved instead of being trimmed as a quoted reply (optional)
 - `SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES`: Comma-separated list of directories from which images referenced in markdown may be embedded into outgoing emails (optional - inline image embedding is disabled if not set)
 - `NOTMUCH_SYNC_SCRIPT`: Path to a script for synchronizing emails (optional)
 - `LOG_FILE_PATH`: Path for logging file (optional)
@@ -172,6 +173,12 @@ Op.*schreef:|Van:|Verzonden|Aan:|Onderwerp:|Datum:|Cc:|Met vriendelijke groet|Ha
 ### Italian
 ```
 Il.*ha scritto:|Da:|Inviato|A:|Oggetto:|Data:|Cc:|Cordiali saluti|Inviato da
+```
+
+The optional `NOTMUCH_FORWARD_SEPARATORS` variable complements this: a forwarded message starts with headers (`From:`, `Sent:`, ...) that look exactly like quoted-reply noise, so reply trimming would normally remove it. Lines matching a forward separator mark content to preserve instead:
+
+```
+NOTMUCH_FORWARD_SEPARATORS="Begin forwarded message:|---------- Forwarded message ----------|-----Original Message-----"
 ```
 
 Note: Use | (pipe) to separate patterns. These are simplified patterns derived from common email clients - you may need to adjust them based on your specific needs.

@@ -248,3 +248,52 @@ def test_get_thread_info_returns_dict():
 
     assert "message_id" in result
     assert result["subject"] == "Test Subject"
+
+
+class TestForwardSeparators:
+    """NOTMUCH_FORWARD_SEPARATORS preserves forwarded messages that reply trimming would eat."""
+
+    FWD = ["begin forwarded message:", "---------- forwarded message ----------"]
+
+    def _view(self, html):
+        mime = _build_mime(html)
+        msg = _make_fake_message("alice@example.com", 1706140800, mime)
+        return nm_lib.message_to_text(msg)
+
+    def test_forwarded_message_is_preserved(self):
+        with patch.object(nm_lib, "NOTMUCH_FORWARD_SEPARATORS", self.FWD):
+            text = self._view(
+                "<p>see below</p><p>Begin forwarded message:</p>"
+                "<p>From: bob@example.com</p><p>the forwarded content</p>")
+        assert "see below" in text
+        assert "the forwarded content" in text
+
+    def test_forwarded_message_trimmed_without_the_env(self):
+        with patch.object(nm_lib, "NOTMUCH_FORWARD_SEPARATORS", []):
+            text = self._view(
+                "<p>see below</p><p>Begin forwarded message:</p>"
+                "<p>From: bob@example.com</p><p>the forwarded content</p>")
+        assert "see below" in text
+        # "from:" is a reply separator, so without the feature the forward is lost
+        assert "the forwarded content" not in text
+
+    def test_reply_after_forward_is_still_trimmed(self):
+        with patch.object(nm_lib, "NOTMUCH_FORWARD_SEPARATORS", self.FWD):
+            text = self._view(
+                "<p>my reply</p><p>from: carol@example.com</p><p>old quoted stuff</p>"
+                "<p>Begin forwarded message:</p><p>the forwarded content</p>")
+        assert "my reply" in text
+        assert "old quoted stuff" not in text
+        assert "the forwarded content" in text
+
+    def test_quoted_separator_lines_match(self):
+        with patch.object(nm_lib, "NOTMUCH_FORWARD_SEPARATORS", []):
+            text = self._view("<p>hello</p><p>&gt; from: bob@example.com</p><p>quoted</p>")
+        assert "hello" in text
+        assert "quoted" not in text
+
+    def test_separators_match_case_insensitively(self):
+        with patch.object(nm_lib, "NOTMUCH_FORWARD_SEPARATORS", []):
+            text = self._view("<p>hello</p><p>FROM: bob@example.com</p><p>quoted</p>")
+        assert "hello" in text
+        assert "quoted" not in text

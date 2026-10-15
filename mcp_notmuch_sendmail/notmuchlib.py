@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import Dict, Optional
 import html2text
 import notmuch2
-from mcp_notmuch_sendmail.core import ROOT_DIR, NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS
+from mcp_notmuch_sendmail.core import (ROOT_DIR, NOTMUCH_DATABASE_PATH, NOTMUCH_REPLY_SEPARATORS,
+                                       NOTMUCH_FORWARD_SEPARATORS)
 
 # Optional script to sync emails
 NOTMUCH_SYNC_SCRIPT = os.environ.get("NOTMUCH_SYNC_SCRIPT", None)
@@ -17,14 +18,35 @@ def message_to_text(message):
     def normalize_empty_lines(text):
         return re.sub(r'(\n\s*){2,}', '\n\n', text)
 
+    def matches_any(line, separators):
+        stripped = line.strip().lower()
+        unquoted = stripped.lstrip('> ')
+        return any(stripped.startswith(sep.lower()) or unquoted.startswith(sep.lower())
+                   for sep in separators)
+
     def extract_reply(text):
+        # Split off a forwarded message first, so the reply-separator trimming below (which matches
+        # the From:/Sent: style headers inside the forward) can't eat it.
+        forwarded_content = None
+        if NOTMUCH_FORWARD_SEPARATORS:
+            lines = text.splitlines()
+            for i, line in enumerate(lines):
+                if matches_any(line, NOTMUCH_FORWARD_SEPARATORS):
+                    forwarded_content = "\n".join(lines[i:])
+                    text = "\n".join(lines[:i])
+                    break
+
+        trimmed = text
         result = []
         for line in text.splitlines():
-            for reply_separator in NOTMUCH_REPLY_SEPARATORS:
-                if line.lower().startswith(reply_separator):
-                    return "\n".join(result).strip()
+            if matches_any(line, NOTMUCH_REPLY_SEPARATORS):
+                trimmed = "\n".join(result).strip()
+                break
             result.append(line)
-        return text
+
+        if forwarded_content:
+            return (trimmed.strip() + "\n\n" + forwarded_content).strip()
+        return trimmed
 
     def decode_payload(part):
         payload = part.get_payload(decode=True)
