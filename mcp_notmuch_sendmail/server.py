@@ -1,13 +1,15 @@
 from pathlib import Path
 from typing import List, Optional
 try:
-    from mcp.server.mcpserver import MCPServer
+    from mcp.server.mcpserver import MCPServer, Image
 except ModuleNotFoundError:
     from mcp.server import FastMCP as MCPServer
+    from mcp.server.fastmcp import Image
 
 from mcp_notmuch_sendmail.core import (SENDMAIL_FROM_EMAIL, SENDMAIL_EMAIL_SIGNATURE_HTML,
                                        SENDMAIL_ALLOWED_UPLOAD_DIRECTORIES, DRAFT_DIR, log)
-from mcp_notmuch_sendmail.notmuchlib import find_threads, view_thread, fetch_new_emails, NOTMUCH_SYNC_SCRIPT
+from mcp_notmuch_sendmail.notmuchlib import (find_threads, view_thread, fetch_new_emails, get_image,
+                                             NOTMUCH_SYNC_SCRIPT)
 from mcp_notmuch_sendmail.sendmail import compose, send
 
 mcp = MCPServer("Notmuch Email Client")
@@ -25,9 +27,18 @@ IMAGE_NOTE = (". You can embed inline images with markdown image syntax using ab
 def find_email_thread(notmuch_search_query: str, max_threads: int = 25) -> str:
     return find_threads(notmuch_search_query, max_threads)
 
-@mcp.tool(description="View all messages for an email thread")
+@mcp.tool(description="View all messages for an email thread. Images and attachments are listed as "
+                      "[image: name] and [attachment: name]; use view_email_image to see an image.")
 def view_email_thread(thread_id: str) -> str:
     return view_thread(thread_id)
+
+@mcp.tool(description="Show an image from an email thread, inline or attached. Use the name listed as "
+                      "[image: name] by view_email_thread.")
+def view_email_image(thread_id: str, filename: str) -> Image | str:
+    error, data, subtype = get_image(thread_id, filename)
+    if error:
+        return error
+    return Image(data=data, format=subtype)
 
 if SENDMAIL_FROM_EMAIL:
     @mcp.tool(description=f"Compose a new email draft from markdown{IMAGE_NOTE}{SIGNATURE_NOTE}")

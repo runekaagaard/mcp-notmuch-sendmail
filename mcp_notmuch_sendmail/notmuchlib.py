@@ -44,6 +44,7 @@ def message_to_text(message):
     result = [f"FROM: {from_addr}", f"DATE: {date_str}"]
     html_parts = []
     plain_parts = []
+    attachments = []
 
     with message.path.open("rb") as f:
         msg = email.message_from_binary_file(f)
@@ -66,13 +67,43 @@ def message_to_text(message):
             plain = extract_reply(plain)
             if plain:
                 plain_parts.append(plain)
+        elif part_name(part):
+            kind = "image" if part.get_content_maintype() == "image" else "attachment"
+            attachments.append(f"[{kind}: {part_name(part)}]")
 
     if html_parts:
         result.extend(html_parts)
     elif plain_parts:
         result.extend(plain_parts)
+    result.extend(attachments)
 
     return "\n".join(result)
+
+
+def part_name(part):
+    """Attachments have a filename; inline images sometimes only a Content-ID."""
+    return part.get_filename() or part.get('Content-ID', '').strip('<>') or ''
+
+
+IMAGE_MAX_BYTES = 5 * 1024 * 1024
+
+
+def get_image(thread_id: str, filename: str):
+    """Find an image part by name anywhere in a thread. Returns (None, bytes, subtype) or (error, None, None)."""
+    db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')
+    try:
+        for message in db.messages(f'thread:{thread_id}'):
+            with message.path.open("rb") as f:
+                msg = email.message_from_binary_file(f)
+            for part in msg.walk():
+                if part_name(part) == filename and part.get_content_maintype() == "image":
+                    data = part.get_payload(decode=True) or b""
+                    if len(data) > IMAGE_MAX_BYTES:
+                        return f"Image {filename} is too large ({len(data)} bytes, max {IMAGE_MAX_BYTES})", None, None
+                    return None, data, part.get_content_subtype()
+    finally:
+        db.close()
+    return f"No image named {filename} in thread {thread_id}", None, None
 
 def find_threads(notmuch_search_query: str, max_threads: int = 25) -> str:
     db = notmuch2.Database(NOTMUCH_DATABASE_PATH, mode='ro')

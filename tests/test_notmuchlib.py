@@ -248,3 +248,61 @@ def test_get_thread_info_returns_dict():
 
     assert "message_id" in result
     assert result["subject"] == "Test Subject"
+
+
+# Images and attachments in received mail
+
+def _build_mixed_mime(html, image_bytes, filename, content_type="image/png", inline=False):
+    import base64
+    b = "===============mixed============="
+    disposition = f'inline; filename="{filename}"' if inline else f'attachment; filename="{filename}"'
+    return (
+        "MIME-Version: 1.0\r\n"
+        f'Content-Type: multipart/mixed; boundary="{b}"\r\n\r\n'
+        f"--{b}\r\nContent-Type: text/html; charset=\"utf-8\"\r\n\r\n{html}\r\n"
+        f"--{b}\r\nContent-Type: {content_type}; name=\"{filename}\"\r\n"
+        f"Content-Disposition: {disposition}\r\nContent-Transfer-Encoding: base64\r\n"
+        f"Content-ID: <{filename}>\r\n\r\n{base64.b64encode(image_bytes).decode()}\r\n"
+        f"--{b}--\r\n"
+    )
+
+
+PNG = b"\x89PNG\r\n\x1a\nfake"
+
+
+def test_thread_view_lists_images_and_attachments():
+    msg = _make_fake_message("a@b.c", 1706140800, _build_mixed_mime("<p>see attached</p>", PNG, "chart.png"))
+    text = nm_lib.message_to_text(msg)
+    assert "see attached" in text
+    assert "[image: chart.png]" in text
+    msg = _make_fake_message("a@b.c", 1706140800,
+                             _build_mixed_mime("<p>x</p>", b"%PDF", "report.pdf", content_type="application/pdf"))
+    assert "[attachment: report.pdf]" in nm_lib.message_to_text(msg)
+
+
+def test_get_image_returns_bytes_and_subtype():
+    msg = _make_fake_message("a@b.c", 1706140800, _build_mixed_mime("<p>x</p>", PNG, "chart.png", inline=True))
+    db = MagicMock()
+    db.messages.return_value = iter([msg])
+    with patch.object(nm_lib.notmuch2, "Database", return_value=db):
+        error, data, subtype = nm_lib.get_image("t1", "chart.png")
+    assert error is None and data == PNG and subtype == "png"
+
+
+def test_get_image_unknown_name_is_an_error():
+    msg = _make_fake_message("a@b.c", 1706140800, _build_mixed_mime("<p>x</p>", PNG, "chart.png"))
+    db = MagicMock()
+    db.messages.return_value = iter([msg])
+    with patch.object(nm_lib.notmuch2, "Database", return_value=db):
+        error, data, _ = nm_lib.get_image("t1", "nope.png")
+    assert data is None and "No image named nope.png" in error
+
+
+def test_get_image_refuses_non_image_parts():
+    msg = _make_fake_message("a@b.c", 1706140800,
+                             _build_mixed_mime("<p>x</p>", b"%PDF", "report.pdf", content_type="application/pdf"))
+    db = MagicMock()
+    db.messages.return_value = iter([msg])
+    with patch.object(nm_lib.notmuch2, "Database", return_value=db):
+        error, data, _ = nm_lib.get_image("t1", "report.pdf")
+    assert data is None and error
